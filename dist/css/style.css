@@ -1515,3 +1515,33 @@ input[type="checkbox"].ui-switch:checked::after {
 .dyn-row:last-child { border-bottom: none; }
 .dyn-name { color: var(--text-primary); font-weight: 600; }
 .dyn-stat { color: var(--text-dim); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+
+/* ---- Hive shape readout & clamp notice --------------------------------- */
+.shape-readout {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--accent-life);
+    background: rgba(21, 222, 89, 0.08);
+    border: 1px solid rgba(21, 222, 89, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+/* Shown only when the engine had to change what was asked for. Staying silent
+   about a clamped value is how a user ends up believing N=1 was accepted. */
+.hive-notice {
+    display: none;
+    font-size: 12px;
+    color: #fde68a;
+    background: rgba(217, 119, 6, 0.12);
+    border-left: 3px solid #d97706;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 8px 11px;
+    margin-bottom: 10px;
+    line-height: 1.45;
+}
+
+.hive-notice.visible { display: block; }

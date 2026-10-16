@@ -10,6 +10,7 @@ const WorldConfig = require('../WorldConfig');
 const SerializeHelper = require('../Utils/SerializeHelper');
 const Species = require('../Stats/Species');
 const BrainArena = require('../Organism/Perception/BrainArena');
+const { clampBrainShape, clampFieldParams } = require('../Organism/Perception/BrainShape');
 const CollectiveField = require('../Collective/CollectiveField');
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator');
 const RNG = require("../Utils/RNG");
@@ -41,14 +42,25 @@ class WorldEnvironment extends Environment{
     }
 
     initHiveMind() {
-        const N = Hyperparams.brainN;
-        const shared_n = Math.max(1, Math.round(N * Hyperparams.brainSharedFrac));
-        this.brain_arena = new BrainArena(256, N, shared_n);
+        // One gate for brain geometry: see BrainShape.clampBrainShape. Reading the
+        // shape back into Hyperparams keeps the UI, saved worlds and presets from
+        // ever holding a value the engine silently refused.
+        const shape = clampBrainShape(Hyperparams.brainN, Hyperparams.brainSharedFrac);
+        Hyperparams.brainN = shape.N;
+        Hyperparams.brainSharedFrac = shape.frac;
+        const field = clampFieldParams(
+            Hyperparams.collectiveRadius, Hyperparams.collectiveLeak, Hyperparams.collectiveTileSize);
+        Hyperparams.collectiveRadius = field.radius;
+        Hyperparams.collectiveLeak = field.leak;
+        Hyperparams.collectiveTileSize = field.tile_size;
+
+        this.brain_shape = shape;
+        this.brain_arena = new BrainArena(256, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
         this.collective_field = new CollectiveField(
             this.num_cols, this.num_rows,
-            Hyperparams.collectiveTileSize, shared_n, Hyperparams.collectiveLeak,
-            Hyperparams.collectiveRadius
+            field.tile_size, shape.shared_n, field.leak, field.radius
         );
+        return shape;
     }
 
     update() {

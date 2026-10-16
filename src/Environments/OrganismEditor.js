@@ -9,6 +9,7 @@ const RNG = require("../Utils/RNG");
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator')
 
 const BrainArena = require('../Organism/Perception/BrainArena');
+const { clampBrainShape } = require('../Organism/Perception/BrainShape');
 const Hyperparams = require('../Hyperparameters');
 
 class OrganismEditor extends Environment{
@@ -18,8 +19,11 @@ class OrganismEditor extends Environment{
         var cell_size = 13;
         // The editor needs an arena so the organism sitting on the workbench has
         // somewhere to hold its brain weights. 4 slots is plenty for one workbench.
-        this.brain_arena = new BrainArena(4, Hyperparams.brainN,
-            Math.max(1, Math.round(Hyperparams.brainN * Hyperparams.brainSharedFrac)));
+        // Same gate as the world: the workbench must build brains of exactly the
+        // shape the world runs, or an organism dropped from here would not fit.
+        const shape = clampBrainShape(Hyperparams.brainN, Hyperparams.brainSharedFrac);
+        this.brain_shape = shape;
+        this.brain_arena = new BrainArena(4, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
         this.grid_map = new GridMap(15, 15, cell_size);
         this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
         this.renderer.fillShape(195, 195);

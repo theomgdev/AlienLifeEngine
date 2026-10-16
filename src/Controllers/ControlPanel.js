@@ -382,6 +382,10 @@ class ControlPanel {
             reader.onload = (e) => {
                 let result=JSON.parse(e.target.result);
                 Hyperparams.loadJsonObj(result);
+                // A preset can carry a brain geometry the engine cannot run, so it
+                // goes through the same gate as the UI. If the shape really changed,
+                // the hive is rebuilt; otherwise only the live knobs are applied.
+                if (this.hive_controls) this.hive_controls.applyLoadedParams();
                 this.updateHyperparamUIValues();
                 // have to clear the value so change() will be triggered if the same file is uploaded again
                 $('#upload-hyperparams')[0].value = '';
