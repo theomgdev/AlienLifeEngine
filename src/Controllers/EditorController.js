@@ -6,6 +6,7 @@ const Hyperparams = require("../Hyperparameters");
 const Species = require("../Stats/Species");
 const LoadController = require("./LoadController");
 const FossilRecord = require("../Stats/FossilRecord");
+const MindViewer = require("../Rendering/MindViewer");
 
 class EditorController extends CanvasController{
     constructor(env, canvas) {
@@ -13,6 +14,7 @@ class EditorController extends CanvasController{
         this.mode = Modes.None;
         this.edit_cell_type = null;
         this.highlight_org = false;
+        this.mind_viewer = new MindViewer('mind-host');
         this.defineCellTypeSelection();
         this.defineEditorDetails();
         this.defineSaveLoad();
@@ -110,17 +112,6 @@ class EditorController extends CanvasController{
         $('#mutation-rate-edit').change ( function() {
             this.env.organism.mutability = parseInt($('#mutation-rate-edit').val());
         }.bind(this));
-        $('#observation-type-edit').change ( function() {
-            this.setBrainEditorValues($('#observation-type-edit').val());
-            this.setBrainDetails();
-        }.bind(this));
-        $('#reaction-edit').change ( function() {
-            var obs = $('#observation-type-edit').val();
-            var decision = parseInt($('#reaction-edit').val());
-            if (this.env.organism.brain.decisions)
-                this.env.organism.brain.decisions[obs] = decision;
-            this.setBrainDetails();
-        }.bind(this));
     }
 
     defineSaveLoad() {
@@ -209,17 +200,13 @@ class EditorController extends CanvasController{
             $('#mutation-rate-cont').css('display', 'block');
         }
         
-        if (this.setBrainPanelVisibility()){
-            this.setBrainEditorValues($('#observation-type-edit').val());
-        }
-
         $('#cell-selections').css('display', 'grid');
         $('#edit-organism-details').css('display', 'block');
     }
 
     setBrainPanelVisibility() {
         var org = this.env.organism;
-        if (org.anatomy.has_eyes && org.anatomy.is_mover) {
+        if (org.anatomy.has_eyes) {
             $('.brain-details').css('display', 'block');
             return true;
         }
@@ -228,35 +215,25 @@ class EditorController extends CanvasController{
     }
 
     setBrainDetails() {
-        var brain = this.env.organism.brain;
-        // The neural brain has no chase/retreat table — it has an evolved matrix.
-        // Show its shape instead of pretending it has discrete decisions.
-        if (!brain.decisions) {
-            var info = brain.inspect ? brain.inspect() : null;
-            if (info) {
-                $('.chase-types').text(
-                    "Neural brain: " + info.N + "x" + info.N +
-                    " (" + info.shared_n + " shared / " + info.private_n + " private)");
-                $('.retreat-types').text("RMSNorm gain: " + info.gain.toFixed(3));
-            } else {
-                $('.chase-types').text("Neural brain (inactive — needs an eye)");
-                $('.retreat-types').text("");
-            }
+        const org = this.env.organism;
+        const brain = org ? org.brain : null;
+        if (!brain || !brain.inspect) {
+            $('.chase-types').text("Blind — no brain.");
+            $('.retreat-types').text("");
+            if (this.mind_viewer) this.mind_viewer.clear();
             return;
         }
-        var chase_types = [];
-        var retreat_types = [];
-        for(var cell_name in brain.decisions) {
-            var decision = brain.decisions[cell_name];
-            if (decision == 1) {
-                retreat_types.push(cell_name)
-            }
-            else if (decision == 2) {
-                chase_types.push(cell_name);
-            }
+        const info = brain.inspect();
+        if (info) {
+            $('.chase-types').text(
+                `Neural brain: ${info.N}x${info.N} (${info.shared_n} shared / ${info.private_n} private)`);
+            $('.retreat-types').text(`RMSNorm gain: ${info.gain.toFixed(3)}`);
+            if (this.mind_viewer) this.mind_viewer.render(info);
+        } else {
+            $('.chase-types').text("Blind — no brain.");
+            $('.retreat-types').text("");
+            if (this.mind_viewer) this.mind_viewer.clear();
         }
-        $('.chase-types').text("Move Towards: " + chase_types);
-        $('.retreat-types').text("Move Away From: " + retreat_types);
     }
 
     setMoveRangeVisibility() {
@@ -269,13 +246,6 @@ class EditorController extends CanvasController{
         $('#move-range-cont').css('display', 'none');
         $('#move-range').css('display', 'none');
         return false;
-    }
-
-    setBrainEditorValues(name) {
-        $('#observation-type-edit').val(name);
-        if (!this.env.organism.brain.decisions) return;
-        var reaction = this.env.organism.brain.decisions[name];
-        $('#reaction-edit').val(reaction);
     }
 
     setRandomizePanel() {

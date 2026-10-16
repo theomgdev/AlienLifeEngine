@@ -8,11 +8,17 @@ const Species = require('../Stats/Species');
 const RNG = require("../Utils/RNG");
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator')
 
+const BrainArena = require('../Organism/Perception/BrainArena');
+
 class OrganismEditor extends Environment{
     constructor() {
         super();
         this.is_active = true;
         var cell_size = 13;
+        // The editor needs an arena so the organism sitting on the workbench has
+        // somewhere to hold its brain weights. 4 slots is plenty for one workbench.
+        this.brain_arena = new BrainArena(4, Hyperparams.brainN,
+            Math.max(1, Math.round(Hyperparams.brainN * Hyperparams.brainSharedFrac)));
         this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
         this.controller = new EditorController(this, this.renderer.canvas);
         this.grid_map = new GridMap(15, 15, cell_size);
@@ -68,6 +74,9 @@ class OrganismEditor extends Environment{
     }
 
     setOrganismToCopyOf(orig_org) {
+        if (this.organism && this.organism.brain && this.organism.brain.detach) {
+            this.organism.brain.detach();
+        }
         this.grid_map.fillGrid(CellStates.empty);
         var center = this.grid_map.getCenter();
         this.organism = new Organism(center[0], center[1], this, orig_org);
@@ -85,6 +94,9 @@ class OrganismEditor extends Environment{
     }
 
     setDefaultOrg() {
+        if (this.organism && this.organism.brain && this.organism.brain.detach) {
+            this.organism.brain.detach();
+        }
         this.clear();
         var center = this.grid_map.getCenter();
         this.organism = new Organism(center[0], center[1], this, null);
