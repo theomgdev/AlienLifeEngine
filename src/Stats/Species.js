@@ -1,4 +1,5 @@
 const CellStates = require("../Organism/Cell/CellStates");
+const RNG = require("../Utils/RNG");
 let FossilRecord = undefined; // workaround to a circular dependency problem
 const getFossilRecord = () => {
     if (!FossilRecord)
@@ -14,7 +15,7 @@ class Species {
         this.cumulative_pop = 1;
         this.start_tick = start_tick;
         this.end_tick = -1;
-        this.name = Math.random().toString(36).substr(2, 10);
+        this.name = RNG.random().toString(36).substr(2, 10);
         this.extinct = false;
         this.calcAnatomyDetails();
     }

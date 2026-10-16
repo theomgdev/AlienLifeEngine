@@ -5,6 +5,7 @@ const Renderer = require('../Rendering/Renderer');
 const CellStates = require('../Organism/Cell/CellStates');
 const EditorController = require("../Controllers/EditorController");
 const Species = require('../Stats/Species');
+const RNG = require("../Utils/RNG");
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator')
 
 class OrganismEditor extends Environment{
@@ -110,8 +111,8 @@ class OrganismEditor extends Environment{
         for (let i=0; i<numOrganisms; i++) {
             let newOrganism = RandomOrganismGenerator.generate(this);
             newOrganism.species = new Species(newOrganism.anatomy, null, 0);
-            var col = Math.floor(size + (Math.random() * (env.grid_map.cols-(size*2)) ) );
-            var row = Math.floor(size + (Math.random() * (env.grid_map.rows-(size*2)) ) );
+            var col = Math.floor(size + (RNG.random() * (env.grid_map.cols-(size*2)) ) );
+            var row = Math.floor(size + (RNG.random() * (env.grid_map.rows-(size*2)) ) );
             env.controller.dropOrganism(newOrganism, col, row);
         }
     }

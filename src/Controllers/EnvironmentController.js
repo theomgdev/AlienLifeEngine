@@ -43,6 +43,12 @@ class EnvironmentController extends CanvasController{
             // Apply scale transform
             el.style.transform = `scale(${scale})`;
             this.scale = scale;
+            // The collective overlay is a separate canvas that mirrors this
+            // transform. Sync it here rather than only in render(): zooming while
+            // the simulation is paused produces no render tick, which left the
+            // overlay stuck at the previous scale.
+            if (this.env.renderer && this.env.renderer.syncOverlayTransform)
+                this.env.renderer.syncOverlayTransform();
 
           }.bind(this);
     }
@@ -52,6 +58,8 @@ class EnvironmentController extends CanvasController{
         $('#env-canvas').css('top', '0px');
         $('#env-canvas').css('left', '0px');
         this.scale = 1;
+        if (this.env.renderer && this.env.renderer.syncOverlayTransform)
+            this.env.renderer.syncOverlayTransform();
     }
 
     /*

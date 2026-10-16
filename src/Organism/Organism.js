@@ -4,8 +4,11 @@ const Hyperparams = require("../Hyperparameters");
 const Directions = require("./Directions");
 const Anatomy = require("./Anatomy");
 const Brain = require("./Perception/Brain");
+const NeuralBrain = require("./Perception/NeuralBrain");
+const SensoryVector = require("./Perception/SensoryVector");
 const FossilRecord = require("../Stats/FossilRecord");
 const SerializeHelper = require("../Utils/SerializeHelper");
+const RNG = require("../Utils/RNG");
 
 class Organism {
     constructor(col, row, env, parent=null) {
@@ -24,7 +27,16 @@ class Organism {
         this.ignore_brain_for = 0;
         this.mutability = 5;
         this.damage = 0;
-        this.brain = new Brain(this);
+        // Neural hive-mind brain when enabled, legacy lookup table otherwise.
+        this.observations = [];
+        if (Hyperparams.useNeuralBrain) {
+            this.brain = new NeuralBrain(this);
+            if (env && env.brain_arena) {
+                this.brain.attach(env.brain_arena, env.collective_field);
+            }
+        } else {
+            this.brain = new Brain(this);
+        }
         if (parent != null) {
             this.inherit(parent);
         }
@@ -38,7 +50,12 @@ class Organism {
             //deep copy parent cells
             this.anatomy.addInheritCell(c);
         }
-        if(parent.anatomy.is_mover && parent.anatomy.has_eyes) {
+        if (Hyperparams.useNeuralBrain) {
+            // The brain is inherited unconditionally: a lineage can lose its eyes
+            // and regain them later, and its evolved mind should survive the gap.
+            this.brain.copy(parent.brain);
+        }
+        else if(parent.anatomy.is_mover && parent.anatomy.has_eyes) {
             this.brain.copy(parent.brain);
         }
     }
@@ -69,7 +86,7 @@ class Organism {
         }
         else {
             //mutate the mutability
-            if (Math.random() <= 0.5)
+            if (RNG.random() <= 0.5)
                 org.mutability++;
             else{ 
                 org.mutability--;
@@ -78,12 +95,22 @@ class Organism {
             }
         } 
         var mutated = false;
-        if (Math.random() * 100 <= prob) {
-            if (org.anatomy.is_mover && Math.random() * 100 <= 10) { 
+        if (RNG.random() * 100 <= prob) {
+            if (Hyperparams.useNeuralBrain) {
+                // Brain and body mutate independently: the mind is always under
+                // selection, not just on a 10% side-branch as in the old engine.
+                org.brain.mutate();
+                if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
+                    org.move_range += Math.floor(RNG.random() * 4) - 2;
+                    if (org.move_range <= 0) org.move_range = 1;
+                }
+                mutated = org.mutate();
+            }
+            else if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
                 if (org.anatomy.has_eyes) {
                     org.brain.mutate();
                 }
-                org.move_range += Math.floor(Math.random() * 4) - 2;
+                org.move_range += Math.floor(RNG.random() * 4) - 2;
                 if (org.move_range <= 0){
                     org.move_range = 1;
                 };
@@ -97,7 +124,7 @@ class Organism {
         var direction = Directions.getRandomScalar();
         var direction_c = direction[0];
         var direction_r = direction[1];
-        var offset = (Math.floor(Math.random() * 3));
+        var offset = (Math.floor(RNG.random() * 3));
         var basemovement = this.anatomy.birth_distance;
         var new_c = this.c + (direction_c*basemovement) + (direction_c*offset);
         var new_r = this.r + (direction_r*basemovement) + (direction_r*offset);
@@ -117,6 +144,13 @@ class Organism {
                 org.species.addPop();
             }
         }
+        else if (org.brain && org.brain.detach) {
+            // Birth failed (no room, or blocked path). The child was never added to
+            // the world and will never die, so its arena slot has to be handed back
+            // here or the weight pool leaks one slot per failed birth — and with a
+            // measured ~78% failure rate that exhausts the arena in minutes.
+            org.brain.detach();
+        }
         Math.max(this.food_collected -= this.foodNeeded(), 0);
     }
 
@@ -127,7 +161,7 @@ class Organism {
         if (this.calcRandomChance(Hyperparams.addProb)) {
             let branch = this.anatomy.getRandomCell();
             let state = CellStates.getRandomLivingType();//branch.state;
-            let growth_direction = Neighbors.all[Math.floor(Math.random() * Neighbors.all.length)]
+            let growth_direction = Neighbors.all[Math.floor(RNG.random() * Neighbors.all.length)]
             let c = branch.loc_col+growth_direction[0];
             let r = branch.loc_row+growth_direction[1];
             if (this.anatomy.canAddCellAt(c, r)){
@@ -151,7 +185,7 @@ class Organism {
     }
 
     calcRandomChance(prob) {
-        return (Math.random() * 100) < prob;
+        return (RNG.random() * 100) < prob;
     }
 
     attemptMove() {
@@ -264,7 +298,12 @@ class Organism {
             var real_r = this.r + cell.rotatedRow(this.rotation);
             this.env.changeCell(real_c, real_r, CellStates.food, null);
         }
-        this.species.decreasePop();
+        if (this.species)
+            this.species.decreasePop();
+        // Hand the brain's arena slot back so a few thousand deaths per second
+        // don't leak the weight pool.
+        if (this.brain && this.brain.detach)
+            this.brain.detach();
         this.living = false;
     }
 
@@ -285,6 +324,7 @@ class Organism {
         if (this.food_collected >= this.foodNeeded()) {
             this.reproduce();
         }
+        this.observations.length = 0;
         for (var cell of this.anatomy.cells) {
             cell.performFunction();
             if (!this.living)
@@ -294,19 +334,39 @@ class Organism {
         if (this.anatomy.is_mover) {
             this.move_count++;
             var changed_dir = false;
-            if (this.ignore_brain_for == 0){
-                changed_dir = this.brain.decide();
-            }  
-            else{
-                this.ignore_brain_for --;
+            if (Hyperparams.useNeuralBrain) {
+                // Only organisms that can see get to think: eyes are the sensory
+                // organ, and a brain with no input would just emit noise.
+                if (this.anatomy.has_eyes) {
+                    const senses = SensoryVector.build(this, this.observations);
+                    changed_dir = this.brain.think(senses);
+                }
+                var moved = this.attemptMove();
+                // No ignore_brain_for here. That patch existed to stop the stateless
+                // table brain from locking onto an unreachable target and grinding
+                // against a wall; a recurrent net learns to route around obstacles
+                // on its own, and blinding it would destroy that.
+                if ((this.move_count > this.move_range && !changed_dir) || !moved) {
+                    if (!this.attemptRotate()) {
+                        this.changeDirection(Directions.getRandomDirection());
+                    }
+                }
             }
-            var moved = this.attemptMove();
-            if ((this.move_count > this.move_range && !changed_dir) || !moved){
-                var rotated = this.attemptRotate();
-                if (!rotated) {
-                    this.changeDirection(Directions.getRandomDirection());
-                    if (changed_dir)
-                        this.ignore_brain_for = this.move_range + 1;
+            else {
+                if (this.ignore_brain_for == 0){
+                    changed_dir = this.brain.decide();
+                }
+                else{
+                    this.ignore_brain_for --;
+                }
+                var moved = this.attemptMove();
+                if ((this.move_count > this.move_range && !changed_dir) || !moved){
+                    var rotated = this.attemptRotate();
+                    if (!rotated) {
+                        this.changeDirection(Directions.getRandomDirection());
+                        if (changed_dir)
+                            this.ignore_brain_for = this.move_range + 1;
+                    }
                 }
             }
         }
@@ -341,18 +401,28 @@ class Organism {
 
     serialize() {
         let org = SerializeHelper.copyNonObjects(this);
+        delete org.observations;
         org.anatomy = this.anatomy.serialize();
-        if (this.anatomy.is_mover && this.anatomy.has_eyes)
+        if (Hyperparams.useNeuralBrain) {
+            let b = this.brain.serialize();
+            if (b) org.brain = b;
+        }
+        else if (this.anatomy.is_mover && this.anatomy.has_eyes)
             org.brain = this.brain.serialize();
-        org.species_name = this.species.name;
+        org.species_name = this.species ? this.species.name : undefined;
         return org;
     }
 
     loadRaw(org) {
         SerializeHelper.overwriteNonObjects(org, this);
+        this.observations = [];
         this.anatomy.loadRaw(org.anatomy)
-        if (org.brain)
-            this.brain.copy(org.brain)
+        if (org.brain) {
+            if (Hyperparams.useNeuralBrain && this.brain.loadRaw)
+                this.brain.loadRaw(org.brain);
+            else if (!Hyperparams.useNeuralBrain)
+                this.brain.copy(org.brain);
+        }
     }
 
 }

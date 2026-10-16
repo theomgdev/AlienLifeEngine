@@ -379,3 +379,75 @@ input:hover,input:active {
 #load-panel-title * {
     display: inline;
 }
+
+/* ---- Hive Mind ---------------------------------------------------------- */
+/* The collective field is the signature feature but it is invisible until you
+   turn it on, so the hint announces it once instead of leaving it undiscovered. */
+
+#hive-hint {
+    display: none;
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    max-width: 560px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(18, 22, 30, 0.92);
+    border: 1px solid rgba(120, 190, 255, 0.35);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    color: #dce6f2;
+    font-size: 14px;
+    line-height: 1.35;
+    align-items: center;
+    gap: 10px;
+}
+
+#hive-hint.visible {
+    display: flex;
+    animation: hive-hint-in 0.45s ease-out;
+}
+
+@keyframes hive-hint-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.hive-hint-dot {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6fe3c4;
+    box-shadow: 0 0 10px #6fe3c4;
+    animation: hive-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes hive-pulse {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 1; }
+}
+
+.hive-hint-text b {
+    color: #9fe8ff;
+    padding: 0 2px;
+}
+
+#hive-hint-close {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: #8b97a6;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+#hive-hint-close:hover { color: #fff; }
+
+.hive-toggle.active {
+    background-color: #2c7a68;
+    color: #c9fff2;
+}

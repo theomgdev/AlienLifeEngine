@@ -22,6 +22,7 @@
 					<button class="edit-mode-btn wall-drop" id="wall-drop" title="Drop/Remove Wall. Hotkey: D"><i class="fa fa-th"></i></button>
 					<button class="edit-mode-btn food-drop selected" id="food-drop" title="Drop/Remove Food. Hotkey: F"><i class="fa fa-cutlery"></i></button>
 					<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
+					<button class="hive-toggle" id="hive-toggle" title="Show the Hive Mind — the collective field every thinking organism shares. Hotkey: V"><i class="fa fa-share-alt"></i></button>
 				</div>
 				<img src="./img/title.png" alt="Life Engine">
 				<h3>Simulation Speed</h3>
@@ -261,7 +262,33 @@
 						<label for="food-blocks" title='When on, reproduction will fail if offspring intersect with food. When off, offspring will remove blocking food.'>Food blocks reproduction</label>
 						<input type="checkbox" id="food-blocks" checked>
 						<br>
-						<button id='save-controls' title="Save all Evolution Controls in a .json file">Save & Download</button>
+
+						<h4 title='Every organism with a mover and an eye carries an NxN recurrent neural brain. A quarter of its state vector is not private: it is read from and written back into a shared field around it, so part of every mind lives in a substrate its neighbours also think with. All of it evolves by mutation alone.'>Hive Mind</h4>
+						<label for="hive-enabled" title='When off, organisms fall back to the simple lookup-table brain of the original engine.'>Neural brains</label>
+						<input type="checkbox" id="hive-enabled" checked>
+						<br>
+						<label for="hive-overlay" title='Draw the collective field over the world as culture patches. Hotkey: V'>Show collective field</label>
+						<input type="checkbox" id="hive-overlay">
+						<br>
+						<label for="brain-size" title='Width of the NxN brain matrix. Bigger brains hold more behaviour but cost more per tick.'>Brain size (N):</label>
+						<input type="number" id="brain-size" min="4" max="48" value=16 step="2">
+						<br>
+						<label for="shared-frac" title='Fraction of the state vector shared with the collective. 0 = fully private minds, 1 = no private thought at all.'>Collective share:</label>
+						<input type="number" id="shared-frac" min="0" max="0.9" value=0.25 step="0.05">
+						<br>
+						<label for="collective-radius" title='How far a mind reaches into the shared field, in grid cells. Each organism reads and writes a disc this wide around itself.'>Influence radius:</label>
+						<input type="number" id="collective-radius" min="2" max="80" value=20 step="2">
+						<br>
+						<label for="collective-leak" title='Memory of the collective field. Higher means regional cultures persist longer and drift more slowly.'>Field memory:</label>
+						<input type="number" id="collective-leak" min="0" max="0.99" value=0.85 step="0.05">
+						<br>
+						<label for="brain-mutation" title='Standard deviation of the gaussian nudge applied to brain weights on mutation.'>Brain mutation rate:</label>
+						<input type="number" id="brain-mutation" min="0" max="1" value=0.08 step="0.01">
+						<br>
+						<label for="random-start" title='Start each world with a crowd of random organisms scaled to its area, instead of a single plant. Many founders means many lineages and immediate regional cultures.'>Random crowd start</label>
+						<input type="checkbox" id="random-start" checked>
+						<br>
+						<button id='save-controls' title="Save all Evolution Controls in a .json file">Save &amp; Download</button>
 						<button id='load-controls' title="Load saved Evolution Controls with a .json file">Load</button>
 						<a id="download-el" style="display: none;"></a>
 						<input id="upload-hyperparams" style="display: none;" type="file">
@@ -331,6 +358,11 @@
 		</div>
 		<div id="headless-notification">
 			<i class="fa fa-eye-slash" ></i>
+		</div>
+		<div id="hive-hint">
+			<span class="hive-hint-dot"></span>
+			<span class="hive-hint-text">Every organism with an eye and a mover thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
+			<button id="hive-hint-close" title="Dismiss">&times;</button>
 		</div>
 		<div id='maximize-hot-control' class='hot-controls'>
 			<button id="maximize" title="Show Control Panel."><i class="fa fa-plus-square"></i></button>

@@ -3,6 +3,7 @@ const Modes = require("./ControlModes");
 const StatsPanel = require("../Stats/StatsPanel");
 const WorldConfig = require("../WorldConfig");
 const LoadController = require("./LoadController");
+const HiveControls = require("./HiveControls");
 
 class ControlPanel {
     constructor(engine) {
@@ -25,6 +26,7 @@ class ControlPanel {
         this.opacity_change_rate = -0.8;
         this.paused=false;
         this.setHyperparamDefaults();
+        this.hive_controls = new HiveControls(engine);
         LoadController.control_panel = this;
     }
 
@@ -70,6 +72,9 @@ class ControlPanel {
                     break;
                 case 'h':
                     $('.headless')[0].click();
+                    break;
+                case 'v': // toggle the collective field overlay (the hive mind)
+                    if (this.hive_controls) this.hive_controls.toggleOverlay();
                     break;
                 case 'j':
                 case ' ':

@@ -1,5 +1,6 @@
 const CellStates = require("./Cell/CellStates");
 const Organism = require("./Organism");
+const RNG = require("../Utils/RNG");
 const Brain = require("./Perception/Brain")
 
 class RandomOrganismGenerator {
@@ -45,7 +46,10 @@ class RandomOrganismGenerator {
         }
 
         // randomize the organism's brain
-        organism.brain.randomizeDecisions(true);
+        // The neural brain's weights are already randomised when its arena slot is
+        // allocated, and it has no decision table to seed.
+        if (organism.brain.randomizeDecisions)
+            organism.brain.randomizeDecisions(true);
 
         return organism;
     }
@@ -53,7 +57,7 @@ class RandomOrganismGenerator {
     static trySpawnCell(organism, x, y, spawnChance) {
 
         var neighbors = organism.anatomy.getNeighborsOfCell(x, y);
-        if (neighbors.length && Math.random() < spawnChance) {
+        if (neighbors.length && RNG.random() < spawnChance) {
             organism.anatomy.addRandomizedCell(CellStates.getRandomLivingType(), x, y);
             return true;
         }

@@ -1,16 +1,17 @@
 const Hyperparams = require("../../Hyperparameters");
 const Directions = require("../Directions");
 const CellStates = require("../Cell/CellStates");
+const RNG = require("../../Utils/RNG");
 
 const Decision = {
     neutral: 0,
     retreat: 1,
     chase: 2,
     getRandom: function(){
-        return Math.floor(Math.random() * 3);
+        return Math.floor(RNG.random() * 3);
     },
     getRandomNonNeutral: function() {
-        return Math.floor(Math.random() * 2)+1;
+        return Math.floor(RNG.random() * 2)+1;
     }
 }
 

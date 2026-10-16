@@ -1,6 +1,7 @@
 const CellStates = require("./Cell/CellStates");
 const BodyCellFactory = require("./Cell/BodyCells/BodyCellFactory");
 const SerializeHelper = require("../Utils/SerializeHelper");
+const RNG = require("../Utils/RNG");
 
 class Anatomy {
     constructor(owner) {
@@ -33,7 +34,11 @@ class Anatomy {
 
     addRandomizedCell(state, c, r) {
         if (state==CellStates.eye && !this.has_eyes) {
-            this.owner.brain.randomizeDecisions();
+            // The legacy table brain seeded random decisions when eyes first
+            // appeared. The neural brain has no decision table — its weights are
+            // already randomised at birth and shaped by evolution from there.
+            if (this.owner.brain && this.owner.brain.randomizeDecisions)
+                this.owner.brain.randomizeDecisions();
         }
         var new_cell = BodyCellFactory.createRandom(this.owner, state, c, r);
         this.cells.push(new_cell);
@@ -94,7 +99,7 @@ class Anatomy {
     }
 
     getRandomCell() {
-        return this.cells[Math.floor(Math.random() * this.cells.length)];
+        return this.cells[Math.floor(RNG.random() * this.cells.length)];
     }
 
     getNeighborsOfCell(col, row) {

@@ -35,7 +35,13 @@ class EyeCell extends BodyCell{
 
     performFunction() {
         var obs = this.look();
-        this.org.brain.observe(obs);
+        // The neural brain consumes all eyes together via SensoryVector, so every
+        // eye's report is kept. The legacy brain only ever used the nearest one.
+        if (Hyperparams.useNeuralBrain) {
+            this.org.observations.push(obs);
+        } else {
+            this.org.brain.observe(obs);
+        }
     }
 
     look() {

@@ -1,3 +1,4 @@
+const RNG = require("../Utils/RNG");
 const Directions = {
     up:0,
     right:1,
@@ -5,10 +6,10 @@ const Directions = {
     left:3,
     scalars:[[0,-1],[1,0],[0,1],[-1,0]],
     getRandomDirection: function() {
-        return Math.floor(Math.random() * 4);
+        return Math.floor(RNG.random() * 4);
     },
     getRandomScalar: function() {
-        return this.scalars[Math.floor(Math.random() * this.scalars.length)];
+        return this.scalars[Math.floor(RNG.random() * this.scalars.length)];
     },
     getOppositeDirection: function(dir) {
         switch(dir){

@@ -1,6 +1,7 @@
+const RNG = require("./RNG");
 let perlin = {
     rand_vect: function(){
-        let theta = Math.random() * 2 * Math.PI;
+        let theta = RNG.random() * 2 * Math.PI;
         return {x: Math.cos(theta), y: Math.sin(theta)};
     },
     dot_prod_grid: function(x, y, vx, vy){

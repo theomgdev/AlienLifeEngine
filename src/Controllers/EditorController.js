@@ -120,7 +120,8 @@ class EditorController extends CanvasController{
         $('#reaction-edit').change ( function() {
             var obs = $('#observation-type-edit').val();
             var decision = parseInt($('#reaction-edit').val());
-            this.env.organism.brain.decisions[obs] = decision;
+            if (this.env.organism.brain.decisions)
+                this.env.organism.brain.decisions[obs] = decision;
             this.setBrainDetails();
         }.bind(this));
     }
@@ -230,10 +231,26 @@ class EditorController extends CanvasController{
     }
 
     setBrainDetails() {
+        var brain = this.env.organism.brain;
+        // The neural brain has no chase/retreat table — it has an evolved matrix.
+        // Show its shape instead of pretending it has discrete decisions.
+        if (!brain.decisions) {
+            var info = brain.inspect ? brain.inspect() : null;
+            if (info) {
+                $('.chase-types').text(
+                    "Neural brain: " + info.N + "x" + info.N +
+                    " (" + info.shared_n + " shared / " + info.private_n + " private)");
+                $('.retreat-types').text("RMSNorm gain: " + info.gain.toFixed(3));
+            } else {
+                $('.chase-types').text("Neural brain (inactive — needs mover + eye)");
+                $('.retreat-types').text("");
+            }
+            return;
+        }
         var chase_types = [];
         var retreat_types = [];
-        for(var cell_name in this.env.organism.brain.decisions) {
-            var decision = this.env.organism.brain.decisions[cell_name];
+        for(var cell_name in brain.decisions) {
+            var decision = brain.decisions[cell_name];
             if (decision == 1) {
                 retreat_types.push(cell_name)
             }
@@ -259,6 +276,7 @@ class EditorController extends CanvasController{
 
     setBrainEditorValues(name) {
         $('#observation-type-edit').val(name);
+        if (!this.env.organism.brain.decisions) return;
         var reaction = this.env.organism.brain.decisions[name];
         $('#reaction-edit').val(reaction);
     }

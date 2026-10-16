@@ -1,3 +1,4 @@
+const RNG = require("../../Utils/RNG");
 // A cell state is used to differentiate type and render the cell
 class CellState{
     constructor(name) {
@@ -89,10 +90,10 @@ const CellStates = {
         this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye];
     },
     getRandomName: function() {
-        return this.all[Math.floor(Math.random() * this.all.length)].name;
+        return this.all[Math.floor(RNG.random() * this.all.length)].name;
     },
     getRandomLivingType: function() {
-        return this.living[Math.floor(Math.random() * this.living.length)];
+        return this.living[Math.floor(RNG.random() * this.living.length)];
     }
 }
 

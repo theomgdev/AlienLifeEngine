@@ -9,6 +9,10 @@ const FossilRecord = require('../Stats/FossilRecord');
 const WorldConfig = require('../WorldConfig');
 const SerializeHelper = require('../Utils/SerializeHelper');
 const Species = require('../Stats/Species');
+const BrainArena = require('../Organism/Perception/BrainArena');
+const CollectiveField = require('../Collective/CollectiveField');
+const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator');
+const RNG = require("../Utils/RNG");
 
 class WorldEnvironment extends Environment{
     constructor(cell_size) {
@@ -25,7 +29,24 @@ class WorldEnvironment extends Environment{
         this.reset_count = 0;
         this.total_ticks = 0;
         this.data_update_rate = 100;
+
+        // --- the hive mind ---
+        // One flat weight pool for every brain, and one coarse collective field
+        // laid over the grid holding the shared 25% of every thinking organism.
+        this.initHiveMind();
+
         FossilRecord.setEnv(this);
+    }
+
+    initHiveMind() {
+        const N = Hyperparams.brainN;
+        const shared_n = Math.max(1, Math.round(N * Hyperparams.brainSharedFrac));
+        this.brain_arena = new BrainArena(256, N, shared_n);
+        this.collective_field = new CollectiveField(
+            this.num_cols, this.num_rows,
+            Hyperparams.collectiveTileSize, shared_n, Hyperparams.collectiveLeak,
+            Hyperparams.collectiveRadius
+        );
     }
 
     update() {
@@ -35,6 +56,12 @@ class WorldEnvironment extends Environment{
             if (!org.living || !org.update()) {
                 to_remove.push(i);
             }
+        }
+        // Fold this tick's shared-state contributions into the collective field.
+        // Must run after every organism has thought, so that all of them read the
+        // same substrate during a tick and the field advances once per tick.
+        if (this.collective_field) {
+            this.collective_field.commit();
         }
         this.removeOrganisms(to_remove);
         if (Hyperparams.foodDropProb > 0) {
@@ -53,6 +80,14 @@ class WorldEnvironment extends Environment{
         }
         this.renderer.renderCells();
         this.renderer.renderHighlights();
+        // The collective overlay lives on its own canvas stacked above the grid, so
+        // the dirty-cell fast path below stays untouched. Repainting the whole grid
+        // every frame to clear the patches cost ~28k fillRects and froze the tab.
+        if (WorldConfig.show_collective_field && this.collective_field) {
+            this.renderer.renderCollectiveOverlay(this.collective_field);
+        } else {
+            this.renderer.clearCollectiveOverlay();
+        }
     }
 
     renderFull() {
@@ -75,7 +110,29 @@ class WorldEnvironment extends Environment{
         }
     }
 
+    /**
+     * Seed a fresh world.
+     *
+     * The upstream engine started from a single static plant, which meant the hive
+     * mind — the whole point of AlienLifeEngine — only appeared if evolution happened
+     * to stumble onto mover AND eye in the same lineage, and often never did. So
+     * life now starts as a crowd scaled to the world: a 100x100 grid gets ~100
+     * organisms, 10x the area gets 10x the founders. More founders means more
+     * independent lineages, which means regional cultures form immediately.
+     *
+     * A thinking ancestor on its own does NOT work: measured, a mover+eye founder
+     * starves before its first birth (5 food collected of the 5 needed), because
+     * movers cannot produce food. A random crowd works because some founders are
+     * static producers that feed the ecosystem while the mobile ones hunt.
+     * See Research/harness/harness_faz0/ancestor_diagnosis.js
+     */
     OriginOfLife() {
+        if (Hyperparams.randomStart) {
+            this.seedRandomOrganisms(this.defaultStartPopulation());
+            // A crowd can fail to place every founder; fall back to the classic
+            // single ancestor rather than leaving a dead world.
+            if (this.organisms.length > 0) return;
+        }
         var center = this.grid_map.getCenter();
         var org = new Organism(center[0], center[1], this);
         org.anatomy.addDefaultCell(CellStates.mouth, 0, 0);
@@ -83,6 +140,44 @@ class WorldEnvironment extends Environment{
         org.anatomy.addDefaultCell(CellStates.producer, -1, -1);
         this.addOrganism(org);
         FossilRecord.addSpecies(org, null);
+    }
+
+    /**
+     * Founder count for this world size: ~1 organism per 100 grid cells, so the
+     * sequence runs 100 -> 1000 -> 10000 as the world grows by 10x in area.
+     */
+    defaultStartPopulation() {
+        const cells = this.grid_map.cols * this.grid_map.rows;
+        const n = Math.round(cells / 100);
+        return Math.max(10, Math.min(Hyperparams.maxStartPopulation, n));
+    }
+
+    /**
+     * Scatter `count` randomly generated organisms across empty space.
+     * Returns how many actually found room.
+     */
+    seedRandomOrganisms(count) {
+        const margin = 8;
+        const cols = this.grid_map.cols, rows = this.grid_map.rows;
+        if (cols <= margin * 2 || rows <= margin * 2) return 0;
+        let placed = 0;
+        for (let i = 0; i < count; i++) {
+            const org = RandomOrganismGenerator.generate(this);
+            if (!org) continue;
+            org.species = new Species(org.anatomy, null, this.total_ticks);
+            const c = Math.floor(margin + RNG.random() * (cols - margin * 2));
+            const r = Math.floor(margin + RNG.random() * (rows - margin * 2));
+            org.c = c; org.r = r;
+            if (org.isClear(c, r, org.rotation, true) && this.canAddOrganism()) {
+                this.addOrganism(org);
+                org.updateGrid();
+                FossilRecord.addSpeciesObj(org.species);
+                placed++;
+            } else if (org.brain && org.brain.detach) {
+                org.brain.detach();   // never placed: hand the arena slot back
+            }
+        }
+        return placed;
     }
 
     addOrganism(organism) {
@@ -141,9 +236,9 @@ class WorldEnvironment extends Environment{
         var num_food = Math.max(Math.floor(this.grid_map.cols*this.grid_map.rows*Hyperparams.foodDropProb/50000), 1)
         var prob = Hyperparams.foodDropProb;
         for (var i=0; i<num_food; i++) {
-            if (Math.random() <= prob){
-                var c=Math.floor(Math.random() * this.grid_map.cols);
-                var r=Math.floor(Math.random() * this.grid_map.rows);
+            if (RNG.random() <= prob){
+                var c=Math.floor(RNG.random() * this.grid_map.cols);
+                var r=Math.floor(RNG.random() * this.grid_map.rows);
 
                 if (this.grid_map.cellAt(c, r).state == CellStates.empty){
                     this.changeCell(c, r, CellStates.food, null);
@@ -156,11 +251,17 @@ class WorldEnvironment extends Environment{
         if (confirm_reset && !confirm('The current environment will be lost. Proceed?'))
             return false;
 
+        // Detach every living brain before dropping the list so the arena starts empty
+        for (var org of this.organisms) {
+            if (org.brain && org.brain.detach) org.brain.detach();
+        }
         this.organisms = [];
         this.grid_map.fillGrid(CellStates.empty, !WorldConfig.clear_walls_on_reset);
         this.renderer.renderFullGrid(this.grid_map.grid);
         this.total_mutability = 0;
         this.total_ticks = 0;
+        // A fresh world gets a fresh hive mind: no weights and no culture survive.
+        this.initHiveMind();
         FossilRecord.clear_record();
         if (reset_life)
             this.OriginOfLife();
@@ -171,6 +272,11 @@ class WorldEnvironment extends Environment{
         this.renderer.cell_size = cell_size;
         this.renderer.fillShape(rows*cell_size, cols*cell_size);
         this.grid_map.resize(cols, rows, cell_size);
+        this.num_cols = cols;
+        this.num_rows = rows;
+        if (this.collective_field)
+            this.collective_field.resize(cols, rows, Hyperparams.collectiveTileSize,
+                undefined, Hyperparams.collectiveRadius);
     }
 
     resizeFillWindow(cell_size) {
@@ -179,6 +285,9 @@ class WorldEnvironment extends Environment{
         this.num_cols = Math.ceil(this.renderer.width / cell_size);
         this.num_rows = Math.ceil(this.renderer.height / cell_size);
         this.grid_map.resize(this.num_cols, this.num_rows, cell_size);
+        if (this.collective_field)
+            this.collective_field.resize(this.num_cols, this.num_rows, Hyperparams.collectiveTileSize,
+                undefined, Hyperparams.collectiveRadius);
     }
 
     serialize() {
