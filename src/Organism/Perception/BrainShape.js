@@ -27,11 +27,16 @@ const SensoryVector = require('./SensoryVector');
 // TURN_L / TURN_R rotate the body itself, which is the only way the brain can
 // aim its eyes. Eyes look along `org.rotation + eye.direction`, while movement
 // follows `org.direction` — two separate fields. Before these channels existed
-// only attemptRotate() ever wrote rotation, and it picked at RANDOM and only
-// when the organism was stuck, so a direction output made the body strafe
-// sideways with its eyes still pointing the old way, and eye orientation was
-// never under selection: there was no stable "forward" for a forward-facing eye
-// to evolve toward. Measured in Research/harness/ux_probe/eye_vs_heading.js
+// nothing but a random stuck-recovery path ever wrote rotation, so a direction
+// output made the body strafe sideways with its eyes still pointing the old way,
+// and eye orientation was never under selection: there was no stable "forward"
+// for a forward-facing eye to evolve toward.
+// Measured in Research/harness/ux_probe/eye_vs_heading.js
+//
+// With these two channels the movement path became fully deterministic: the
+// random fallback and its move_range timer are gone, and birth orientation is
+// inherited rather than re-rolled. Nothing but the brain moves a living body.
+// Measured in Research/harness/ux_probe/randomness_audit.js
 const ACTIONS = {
     UP: 0, DOWN: 1, RIGHT: 2, LEFT: 3,
     HOLD: 4,      // keep the current heading and keep moving

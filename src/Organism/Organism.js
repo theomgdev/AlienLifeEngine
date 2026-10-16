@@ -21,8 +21,8 @@ class Organism {
         this.direction = Directions.down; // direction of movement
         this.rotation = Directions.up; // direction of rotation
         this.can_rotate = Hyperparams.rotationEnabled;
-        this.move_count = 0;
-        this.move_range = 4;
+        // No move_count/move_range: movement has no timer. The brain decides
+        // every tick and nothing overrides it.
         this.mutability = 5;
         this.damage = 0;
         // Every organism carries a brain. It only gets used once the body has an
@@ -39,7 +39,6 @@ class Organism {
     }
 
     inherit(parent) {
-        this.move_range = parent.move_range;
         this.mutability = parent.mutability;
         this.species = parent.species;
         for (var c of parent.anatomy.cells){
@@ -66,9 +65,12 @@ class Organism {
         //produce mutated child
         //check nearby locations (is there room and a direct path)
         var org = new Organism(0, 0, this.env, this);
-        if(Hyperparams.rotationEnabled){
-            org.rotation = Directions.getRandomDirection();
-        }
+        // Orientation is inherited, not re-rolled. A random birth rotation threw
+        // away the one thing a turn action is for: a lineage that evolved to face
+        // its food would have each child spun to a random facing, so body-plan
+        // and eye-placement selection had to fight a coin flip every generation.
+        // Children can still turn on their first tick if they want to.
+        org.rotation = this.rotation;
         var prob = this.mutability;
         if (Hyperparams.useGlobalMutability){
             prob = Hyperparams.globalMutability;
@@ -88,13 +90,12 @@ class Organism {
             // Brain and body mutate together on every mutation event: the mind is
             // always under selection, not on a 10% side-branch as it was upstream.
             org.brain.mutate();
-            if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
-                org.move_range += Math.floor(RNG.random() * 4) - 2;
-                if (org.move_range <= 0) org.move_range = 1;
-            }
-            {
-                mutated = org.mutate();
-            }
+            // move_range used to mutate here. It fed the stuck-detection timeout
+            // ("you have gone straight for N ticks, now turn at random"), which is
+            // gone: holding a heading is a real decision now. Nothing reads the
+            // field any more, so mutating it was spending mutation events on a
+            // trait with no phenotype.
+            mutated = org.mutate();
         }
 
         var direction = Directions.getRandomScalar();
@@ -191,35 +192,14 @@ class Organism {
         return false;
     }
 
-    attemptRotate() {
-        if(!this.can_rotate){
-            this.direction = Directions.getRandomDirection();
-            this.move_count = 0;
-            return true;
-        }
-        var new_rotation = Directions.getRandomDirection();
-        if(this.isClear(this.c, this.r, new_rotation)){
-            for (var cell of this.anatomy.cells) {
-                var real_c = this.c + cell.rotatedCol(this.rotation);
-                var real_r = this.r + cell.rotatedRow(this.rotation);
-                this.env.changeCell(real_c, real_r, CellStates.empty, null);
-            }
-            this.rotation = new_rotation;
-            this.direction = Directions.getRandomDirection();
-            this.updateGrid();
-            this.move_count = 0;
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Rotate the body to a chosen orientation, taking its eyes with it.
      *
-     * Separate from attemptRotate(), which exists as the stuck-detection
-     * fallback and deliberately randomises both rotation and heading. This one
-     * is a decision: it changes nothing but the orientation, so a brain can aim
-     * its eyes without also scrambling where it was going.
+     * This is the only way rotation ever changes during life. The old
+     * attemptRotate() randomised both rotation and heading as a stuck-detection
+     * fallback and has been deleted along with that fallback: a brain that can
+     * halt, reverse and turn does not need rescuing, and rescuing it hid the
+     * consequence of its own choices.
      *
      * Returns false when the rotated body would not fit — a long creature in a
      * corridor genuinely cannot turn, which is a real cost of that body plan and
@@ -241,7 +221,6 @@ class Organism {
 
     changeDirection(dir) {
         this.direction = dir;
-        this.move_count = 0;
     }
 
     // assumes either c1==c2 or r1==r2, returns true if there is a clear path from point 1 to 2
@@ -344,47 +323,49 @@ class Organism {
         // eye, so everything that moves also thinks, and the payoff of mobility is
         // the payoff of the brain.
         if (this.anatomy.is_mover) {
-            this.move_count++;
             const senses = SensoryVector.build(this, this.observations);
             const intent = this.brain.think(senses);
 
-            // A halt is a decision, not a failure to decide: the body stays put,
-            // the brain keeps running, and none of the stuck-detection fallback
-            // fires. Without this a creature that wanted to sit still would be
-            // rotated away by the "didn't move" branch below every single tick.
-            if (intent === NeuralBrain.INTENT_HALT) {
-                this.move_count = 0;
-                return this.living;
-            }
+            // Every branch below is the brain's decision. There is deliberately no
+            // random fallback: the stuck-detection that used to live here fired on
+            // 33.3% of all decisions (29.8% blocked movement, 3.4% a move_range
+            // timeout) and replaced the chosen action with a random rotation and
+            // heading, which actively prevented the network from learning to get
+            // itself out of trouble — it never saw the consequence of hitting a
+            // wall, only a random jump. The timeout branch was worse than useless:
+            // it punished a deliberate "hold course", which is now its own action.
+            //
+            // That fallback was correct for the old stateless lookup-table brain,
+            // which could lock onto a wall forever. A recurrent net has memory plus
+            // halt, reverse and two body turns, so escaping is its own job — and a
+            // lineage whose brain cannot manage it is supposed to die.
+            // Measured in Research/harness/ux_probe/fallback_attribution.js
+            switch (intent) {
+                case NeuralBrain.INTENT_HALT:
+                    // Standing still is a decision; nothing else happens this tick.
+                    break;
 
-            // A body turn is also a decision and costs the tick's movement: the
-            // creature spends the step aiming its eyes instead of travelling.
-            // That tradeoff is the point — it is what makes a good line of sight
-            // worth evolving a body geometry for.
-            if (intent === NeuralBrain.INTENT_TURN_L || intent === NeuralBrain.INTENT_TURN_R) {
-                const turned = intent === NeuralBrain.INTENT_TURN_L
-                    ? Directions.rotateLeft(this.rotation)
-                    : Directions.rotateRight(this.rotation);
-                if (this.attemptRotateTo(turned)) {
-                    this.move_count = 0;
-                    return this.living;
+                case NeuralBrain.INTENT_TURN_L:
+                case NeuralBrain.INTENT_TURN_R: {
+                    // Aiming the eyes costs the tick's movement. If the geometry
+                    // refuses the turn the tick is simply lost — a body plan that
+                    // cannot turn in tight space pays for itself honestly.
+                    const turned = intent === NeuralBrain.INTENT_TURN_L
+                        ? Directions.rotateLeft(this.rotation)
+                        : Directions.rotateRight(this.rotation);
+                    this.attemptRotateTo(turned);
+                    break;
                 }
-                // Blocked: it wanted to turn and the geometry refused. Fall
-                // through so the stuck-detection below can still rescue it.
-            }
 
-            const moved = intent === NeuralBrain.INTENT_REVERSE
-                ? this.attemptMove(true)
-                : this.attemptMove();
+                case NeuralBrain.INTENT_REVERSE:
+                    this.attemptMove(true);
+                    break;
 
-            const changed_dir = intent === NeuralBrain.INTENT_TURNED;
-            // No ignore_brain_for here. That existed to stop the stateless table
-            // brain grinding against a wall it had locked onto; a recurrent net
-            // routes around obstacles itself, and blinding it would destroy that.
-            if ((this.move_count > this.move_range && !changed_dir) || !moved) {
-                if (!this.attemptRotate()) {
-                    this.changeDirection(Directions.getRandomDirection());
-                }
+                default:
+                    // INTENT_NONE (hold course) and INTENT_TURNED (new heading,
+                    // already applied by the brain) both travel this tick.
+                    this.attemptMove();
+                    break;
             }
         }
         return this.living;
