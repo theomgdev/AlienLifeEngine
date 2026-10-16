@@ -7,12 +7,13 @@
 // only the closest observation ever won. Here every eye contributes its own
 // channels and the body's internal state is perceivable too.
 //
-// Channel layout (default 11 channels, fits inside private_n = 12 at N=16):
+// Channel layout (default 12 channels):
 //   0..3   per-eye threat/food valence   (what the eye sees, signed)
 //   4..7   per-eye proximity             (1 = touching, 0 = nothing in range)
 //   8      hunger        food_collected / foodNeeded()   -> 0..1
 //   9      integrity     1 - damage / maxHealth()        -> 0..1
 //   10     age           lifetime / lifespan()           -> 0..1
+//   11     random drive  stochastic noise in [-1, 1]     -> spontaneous exploration
 //
 // Valence is a hand-set prior on cell types, NOT a decision: it tells the brain
 // *what* is there in one number, and the evolved weights decide what to do about it.
@@ -25,9 +26,10 @@
 
 const CellStates = require('../Cell/CellStates');
 const Hyperparams = require('../../Hyperparameters');
+const RNG = require('../../Utils/RNG');
 
 const MAX_EYES = 4;
-const CHANNELS = 11;
+const CHANNELS = 12;
 
 // cell type -> valence prior
 const VALENCE = {
@@ -100,6 +102,13 @@ const SensoryVector = {
         v[9] = maxHp > 0 ? Math.max(0, 1 - org.damage / maxHp) : 0;
         const span = org.lifespan();
         v[10] = span > 0 ? Math.min(1, org.lifetime / span) : 0;
+
+        // Endogenous stochastic signal in [-1, 1].
+        // Gives evolution a random drive: if Win connects to this channel,
+        // the creature can generate spontaneous exploratory wander, break
+        // deadlocks or symmetries, or produce randomized patrol paths without
+        // needing external stimulus. If Win evolves to 0, it is ignored.
+        v[11] = RNG.random() * 2 - 1;
 
         return v;
     },
