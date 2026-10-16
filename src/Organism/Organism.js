@@ -23,7 +23,7 @@ class Organism {
         this.can_rotate = Hyperparams.rotationEnabled;
         this.move_count = 0;
         this.move_range = 4;
-        this.mutability = 5;
+        this.mutability = 10;
         this.damage = 0;
         // Every organism carries a brain. It only gets used once the body has an
         // eye, but it is inherited unconditionally so a lineage that loses its

@@ -9,7 +9,7 @@ const Hyperparams = {
         this.growableNeighbors = Neighbors.adjacent;
 
         this.useGlobalMutability = false;
-        this.globalMutability = 5;
+        this.globalMutability = 10;
         this.addProb = 33;
         this.changeProb = 33;
         this.removeProb = 33;
