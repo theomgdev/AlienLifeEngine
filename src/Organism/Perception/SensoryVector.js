@@ -18,6 +18,10 @@
 // *what* is there in one number, and the evolved weights decide what to do about it.
 // Sign carries the obvious physics (killer hurts, food feeds); everything else is
 // near zero so evolution is free to assign meaning.
+//
+// One exception is load-bearing: when seeThroughSelf is off, an eye staring into
+// its own body reports a mild negative instead of nothing, so an occluded eye is
+// a perceivable handicap and body geometry comes under selection.
 
 const CellStates = require('../Cell/CellStates');
 const Hyperparams = require('../../Hyperparameters');
@@ -36,6 +40,12 @@ const VALENCE = {
     armor: -0.15,
     eye: -0.1,
 };
+
+// Your own body blocking your own eye, when seeThroughSelf is off. It is not a
+// threat, it is a wasted eye: mildly negative so evolution feels a reason to
+// keep sightlines clear and shape a better body geometry, but far weaker than a
+// killer so a self-occluded eye is a handicap rather than a death sentence.
+const SELF_OCCLUSION_VALENCE = -0.25;
 
 const SensoryVector = {
     CHANNELS,
@@ -58,13 +68,25 @@ const SensoryVector = {
         for (let i = 0; i < n; i++) {
             const obs = observations[i];
             if (!obs || !obs.cell) continue;
-            // ignore your own body: self-sight is noise, not perception
-            if (obs.cell.owner === org) continue;
+
+            const proximity = Math.max(0, 1 - obs.distance / range);
+
+            if (obs.cell.owner === org) {
+                // Own body in the sightline. With seeThroughSelf on, the ray
+                // already skipped past it, so reaching here at all means the
+                // switch is off and this eye is genuinely occluded. Report that
+                // as a real percept instead of silence: reporting zero made
+                // blindness indistinguishable from open space, so evolution got
+                // no signal at all and self-blinding eyes drifted in for free.
+                if (!Hyperparams.seeThroughSelf) {
+                    v[i] = SELF_OCCLUSION_VALENCE;
+                    v[MAX_EYES + i] = proximity;
+                }
+                continue;
+            }
 
             const name = obs.cell.state ? obs.cell.state.name : 'empty';
             const valence = VALENCE[name] !== undefined ? VALENCE[name] : 0;
-            // proximity: 1 when adjacent, decaying to 0 at the edge of vision
-            const proximity = Math.max(0, 1 - obs.distance / range);
 
             v[i] = valence;
             v[MAX_EYES + i] = proximity;
