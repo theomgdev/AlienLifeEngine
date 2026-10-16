@@ -7,6 +7,10 @@ const FossilRecord = {
     init: function(){
         this.extant_species = {};
         this.extinct_species = {};
+        // Lightweight id -> {name, ancestor_id, generation} index that survives
+        // fossil record trimming, so lineage walks never hit a dead end even if
+        // the full fossil entry was pruned. 4000 items is negligible memory.
+        this.ancestor_index = Object.create(null);
 
         // if an organism has fewer than this cumulative pop, discard them on extinction
         this.min_discard = 10;
@@ -61,6 +65,7 @@ const FossilRecord = {
     addSpecies: function(org, ancestor) {
         var new_species = new Species(org.anatomy, ancestor, this.env.total_ticks);
         this.extant_species[new_species.name] = new_species;
+        this._recordIndex(new_species);
         org.species = new_species;
         return new_species;
     },
@@ -71,7 +76,20 @@ const FossilRecord = {
             return;
         }
         this.extant_species[species.name] = species;
+        this._recordIndex(species);
         return species;
+    },
+
+    _recordIndex: function(species) {
+        if (!this.ancestor_index) this.ancestor_index = Object.create(null);
+        this.ancestor_index[species.id] = {
+            id: species.id,
+            name: species.name,
+            ancestor_id: species.ancestor_id,
+            generation: species.generation,
+            start_tick: species.start_tick,
+            end_tick: -1,
+        };
     },
 
     changeSpeciesName: function(species, new_name) {
@@ -151,6 +169,7 @@ const FossilRecord = {
     byId: function(id) {
         for (const s of Object.values(this.extant_species)) if (s.id === id) return s;
         for (const s of Object.values(this.extinct_species)) if (s.id === id) return s;
+        if (this.ancestor_index && this.ancestor_index[id]) return this.ancestor_index[id];
         return null;
     },
 
