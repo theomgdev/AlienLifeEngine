@@ -49,8 +49,11 @@ class StatsPanel {
 
     updateDetails() {
         var org_count = this.env.organisms.length;
+        var sp_count = FossilRecord.numExtantSpecies();
+        $('#hud-live-pop').text(org_count);
+        $('#hud-live-species').text(sp_count);
         $('#org-count').text("Total Population: " + org_count);
-        $('#species-count').text("Number of Species: " + FossilRecord.numExtantSpecies());
+        $('#species-count').text("Number of Species: " + sp_count);
         let top_species = FossilRecord.getMostPopulousSpecies();
         if (top_species)
             $('#top-species').text("Most Populous Species: \"" + top_species.name + "\" (" + top_species.population + " organisms)");

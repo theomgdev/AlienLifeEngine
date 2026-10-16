@@ -3,10 +3,6 @@
 import Engine from './Engine';
 
 $('document').ready(function(){
-    let isMobile = mobileCheck();
-    if (isMobile) {
-        alert("Welcome to the Life Engine! Be aware the website is not built for mobile, so try on desktop for the best experience!");
-    }
     var engine = new Engine();
     engine.start(60);
 });

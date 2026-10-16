@@ -36,18 +36,33 @@ class ControlPanel {
         this.control_panel_active = false;
         this.no_hud = false;
         $('#minimize').click ( () => {
-            $('.control-panel').css('display', 'none');
-            $('.hot-controls').css('display', 'block');
+            $('.control-panel').removeClass('panel-open').css('display', 'none');
+            $('#maximize').removeClass('active');
+            $('#open-studio-btn').removeClass('active');
             this.control_panel_active = false;
             this.stats_panel.stopAutoRender();
         });
         $('#maximize').click ( () => {
-            $('.control-panel').css('display', 'grid');
-            $('.hot-controls').css('display', 'none');
+            $('.control-panel').addClass('panel-open').css('display', 'flex');
+            $('#maximize').addClass('active');
+            $('#open-studio-btn').addClass('active');
             this.control_panel_active = true;
-            if (this.tab_id == 'stats') {
+            var curTab = this.tab_id || 'about';
+            $('.tab').css('display', 'none');
+            $('#' + curTab + '.tab').css('display', 'block');
+            $('.tabnav-item').removeClass('open-tab');
+            $('#' + curTab + '.tabnav-item').addClass('open-tab');
+            if (curTab === 'stats') {
                 this.stats_panel.startAutoRender();
+            } else if (curTab === 'editor') {
+                this.editor_controller.refreshDetailsPanel();
             }
+        });
+        $('#open-studio-btn').click ( () => {
+            if (this.control_panel_active)
+                $('#minimize').click();
+            else
+                $('#maximize').click();
         });
     }
 
@@ -163,7 +178,7 @@ class ControlPanel {
         $('.tabnav-item').click(function() {
             $('.tab').css('display', 'none');
             var tab = '#'+this.id+'.tab';
-            $(tab).css('display', 'grid');
+            $(tab).css('display', 'block');
             $('.tabnav-item').removeClass('open-tab')
             $('#'+this.id+'.tabnav-item').addClass('open-tab');
             self.engine.organism_editor.is_active = (this.id == 'editor');
@@ -529,7 +544,9 @@ class ControlPanel {
     }
 
     update(delta_time) {
-        $('#fps-actual').text("Actual FPS: " + Math.floor(this.engine.actual_fps));
+        const fpsVal = Math.floor(this.engine.actual_fps);
+        $('#fps-actual').text("Actual FPS: " + fpsVal);
+        $('#hud-live-fps').text(fpsVal + " FPS");
         $('#reset-count').text("Auto reset count: " + this.engine.env.reset_count);
         this.stats_panel.updateDetails();
         if (WorldConfig.headless)

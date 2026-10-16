@@ -1,340 +1,608 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>Alien Life Engine</title>
 		<link rel="icon" href="./img/icon.png">
 		<link rel="stylesheet" href="./css/style.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 		<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 	</head>
 	<body>
 		<script src="./js/bundle.js"></script>
-		
-		<div id='env'>
-			<canvas id='env-canvas'></canvas>
+
+		<!-- Full-bleed Simulation Canvas -->
+		<div id="env">
+			<canvas id="env-canvas"></canvas>
 		</div>
-		<div class='control-panel'>
-			<div id='speed-controller' class='control-set'>
-				<div class='vertical-buttons'>
-					<button class="reset-view" title="Reset View. Hotkey: A"><i class="fa fa-video-camera"></i></button>
-					<button class="edit-mode-btn drag-view" id="drag-view" title="Drag View. Hotkey: S"><i class="fa fa-arrows"></i></button>
-					<button class="edit-mode-btn wall-drop" id="wall-drop" title="Drop/Remove Wall. Hotkey: D"><i class="fa fa-th"></i></button>
-					<button class="edit-mode-btn food-drop selected" id="food-drop" title="Drop/Remove Food. Hotkey: F"><i class="fa fa-cutlery"></i></button>
-					<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
-					<button class="hive-toggle" id="hive-toggle" title="Show the Hive Mind — the collective field every thinking organism shares. Hotkey: V"><i class="fa fa-share-alt"></i></button>
+
+		<!-- TOP GLASS HUD: Header, Live Telemetry & Actions -->
+		<header id="top-hud">
+			<div class="hud-left">
+				<div class="hud-brand">
+					<span class="hud-brand-symbol">🪐</span>
+					<span class="wordmark">ALIEN<span class="wordmark-accent">LIFE</span>ENGINE</span>
 				</div>
-				<h1 class="wordmark">ALIEN<span class="wordmark-accent">LIFE</span>ENGINE</h1>
-				<h3>Simulation Speed</h3>
-				<input id="slider" type="range" min="1" max="300" value="60">
-				<button class='pause-button' title="Play/Pause. Hotkey: Spacebar"><i class="fa fa-pause"></i></button>
-				<button class="headless" title="Toggle rendering. Hotkey: H"><i class="fa fa-eye-slash"></i></button>
-				<p id='fps'>Target FPS: 60</p>
-				<p id='fps-actual'></p>
-				<button id='reset-env' title='Restarts simulation with default organism.'>Reset</button>
-				<button id='clear-env' title="Removes all organisms.">Clear</button>
-				<div id="brush-size-container">
-					<label id="brush-slider-label" for="brush-slider" title='Size of the brush for food, walls, and killing'><i class="fa fa-brush"></i> Brush Size </label>
+				<div class="hud-telemetry">
+					<div class="hud-pill" title="Living population">
+						<span class="hud-dot dot-pop"></span>
+						<span class="hud-lbl">POP</span>
+						<span id="hud-live-pop" class="hud-val">0</span>
+					</div>
+					<div class="hud-pill" title="Living species count">
+						<span class="hud-dot dot-species"></span>
+						<span class="hud-lbl">SPECIES</span>
+						<span id="hud-live-species" class="hud-val">0</span>
+					</div>
+					<div class="hud-pill" title="Simulation performance">
+						<span id="hud-live-fps" class="hud-val">60 FPS</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Hive Mind Notification Toast (Centered at Top) -->
+			<div id="hive-hint">
+				<span class="hive-hint-dot"></span>
+				<span class="hive-hint-text">Every organism with an eye thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
+				<button id="hive-hint-close" title="Dismiss">&times;</button>
+			</div>
+
+			<div class="hud-right">
+				<button class="hud-btn hive-toggle" id="hive-toggle" title="Toggle Hive Mind collective field. Hotkey: V">
+					<i class="fa fa-share-alt"></i>
+					<span>Hive Mind</span>
+				</button>
+				<button class="hud-btn" id="community-creations-btn" title="Community worlds and organisms">
+					<i class="fa fa-users"></i>
+					<span>Community</span>
+				</button>
+				<button class="hud-btn hud-btn-primary" id="open-studio-btn" title="Toggle Studio Dashboard. Hotkey: Q">
+					<i class="fa fa-sliders"></i>
+					<span>Dashboard</span>
+				</button>
+			</div>
+		</header>
+
+		<!-- FLOATING ACTION DOCK (Centered at Bottom) -->
+		<nav id="floating-dock">
+			<!-- Playback Controls -->
+			<div class="dock-section dock-playback">
+				<button class="dock-btn pause-button" title="Play / Pause. Hotkey: Spacebar">
+					<i class="fa fa-pause"></i>
+				</button>
+				<div class="dock-speed" title="Simulation Speed">
+					<i class="fa fa-gauge-high dock-icon"></i>
+					<input id="slider" type="range" min="1" max="300" value="60">
+					<span id="fps-actual" class="dock-speed-val">60 FPS</span>
+				</div>
+				<button class="dock-btn headless" title="Toggle rendering. Hotkey: H">
+					<i class="fa fa-eye-slash"></i>
+				</button>
+			</div>
+
+			<div class="dock-divider"></div>
+
+			<!-- Interaction Tools (Exclusive Mode Selection) -->
+			<div class="dock-section dock-tools">
+				<button class="dock-btn edit-mode-btn drag-view" id="drag-view" title="Pan & Drag View. Hotkey: S">
+					<i class="fa fa-arrows"></i>
+				</button>
+				<button class="dock-btn edit-mode-btn select" id="select" title="Inspect / Select Organism. Hotkey: Z">
+					<i class="fa-regular fa-hand-pointer"></i>
+				</button>
+				<button class="dock-btn edit-mode-btn food-drop selected" id="food-drop" title="Feed / Drop Food. Hotkey: F">
+					<i class="fa fa-cutlery"></i>
+				</button>
+				<button class="dock-btn edit-mode-btn wall-drop" id="wall-drop" title="Draw Wall. Hotkey: D">
+					<i class="fa fa-th"></i>
+				</button>
+				<button class="dock-btn edit-mode-btn click-kill" id="click-kill" title="Kill Organism. Hotkey: G">
+					<i class="fa fa-skull"></i>
+				</button>
+				<button class="dock-btn reset-view" title="Center Viewport. Hotkey: A">
+					<i class="fa fa-video-camera"></i>
+				</button>
+			</div>
+
+			<div class="dock-divider"></div>
+
+			<!-- Quick Utilities & Drawer Toggle -->
+			<div class="dock-section dock-utils">
+				<div id="brush-size-container" class="dock-brush" title="Brush Size for Food, Walls and Kill">
+					<label id="brush-slider-label" for="brush-slider"><i class="fa fa-brush"></i></label>
 					<input id="brush-slider" type="range" min="0" max="15" value="2">
 				</div>
+				<button id="reset-env" class="dock-btn dock-btn-subtle" title="Reset Simulation with Default Organism">
+					<i class="fa fa-rotate-right"></i>
+				</button>
+				<button id="clear-env" class="dock-btn dock-btn-subtle" title="Clear All Organisms">
+					<i class="fa fa-trash-can"></i>
+				</button>
+				<button id="maximize" class="dock-btn dock-btn-drawer" title="Toggle Studio Control Panel <span class="hotkey-hint">(Hotkey: Q)</span>">
+					<i class="fa fa-chevron-up"></i>
+				</button>
 			</div>
+		</nav>
 
-			<div id='tab-container' class='control-set'>
-
+		<!-- THE STUDIO DRAWER / SLIDE-OVER SHEET (Control Panel) -->
+		<aside class="control-panel">
+			<div class="sheet-handle"></div>
+			
+			<div class="drawer-header">
+				<div class="drawer-title-row">
+					<div class="drawer-title">
+						<span class="drawer-badge">STUDIO</span>
+						<h2>Alien Life Engine</h2>
+					</div>
+					<button id="minimize" class="drawer-close-btn" title="Close Studio. Hotkey: Q">
+						<i class="fa fa-times"></i>
+					</button>
+				</div>
+				
+				<!-- Modern Horizontal Tab Bar -->
 				<div class="tabnav">
-					<p class='tabnav-item open-tab' id='about'>About</p>
-					<p class='tabnav-item' id='editor'>Editor</p>
-					<p class='tabnav-item' id='world-controls'>World Controls</p>
-					<p class='tabnav-item' id='hyperparameters'>Evolution Controls</p>
-					<p class='tabnav-item' id='stats'>Statistics</p>
-					<p class='tabnav-item' id='chronicle'>Chronicle</p>
-					<button id="minimize" title="Minimze Control Panel."><i class="fa fa-minus-square"></i></button>
+					<button class="tabnav-item open-tab" id="about">
+						<i class="fa fa-circle-info"></i><span>About</span>
+					</button>
+					<button class="tabnav-item" id="editor">
+						<i class="fa fa-dna"></i><span>Editor</span>
+					</button>
+					<button class="tabnav-item" id="chronicle">
+						<i class="fa fa-book-journal-whills"></i><span>Chronicle</span>
+					</button>
+					<button class="tabnav-item" id="hyperparameters">
+						<i class="fa fa-network-wired"></i><span class="tab-label-full">Evolution &amp; Hive</span><span class="tab-label-short">Evolution</span>
+					</button>
+					<button class="tabnav-item" id="world-controls">
+						<i class="fa fa-globe"></i><span>World</span>
+					</button>
+					<button class="tabnav-item" id="stats">
+						<i class="fa fa-chart-line"></i><span>Statistics</span>
+					</button>
 				</div>
+			</div>
 
-				<div id='about' class='tab'>
-					<div class='left-half'>
-						<h3>Alien Life Engine</h3>
-						<p>A world where every organism that can see thinks with an evolved neural brain — and a quarter of that mind is not its own.</p>
-						<p>The shared quarter is written into a field around each creature and read back by everyone nearby. Nothing is taught and nothing is trained: the weights are shaped by selection alone. Watch long enough and regions of the map drift into different collective states — cultures, with borders.</p>
-						<p>Each organism is made up of different colored cells. Hover over each color to learn what it does.</p>
-						<div id='cell-legend'>
-							<div class='cell-legend-type' id='mouth' title="Mouth: Eats adjacent food."></div>
-							<div class='cell-legend-type' id='producer' title="Producer: Produces adjacent food. A sighted body produces more slowly."></div>
-							<div class='cell-legend-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
-							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
-							<div class='cell-legend-type' id='eye' title="Eye: Sees. Grants movement and a thinking brain — there is no separate mover cell."></div>
-							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
-							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
-						</div><br>
-						<p class='hive-about-hint'>Press <b>V</b> to see the collective field. Read the world's own history in the <b>Chronicle</b> tab.</p>
-					</div>
-					<div class='right-half'>
-						<h4>How a mind works here</h4>
-						<p class='about-detail'>Every sighted organism carries an N&times;N fully connected recurrent network. Its state vector is split: three quarters are private memory, one quarter is read from and written back to the shared field. Weights are private and inherited; only state is shared, so two creatures reading the same substrate interpret it through different minds.</p>
-						<p class='about-detail'>The state is renormalised every timestep, which is what keeps a recurrent loop under unbounded mutation from either saturating or fading to nothing.</p>
-						<p class='about-detail'>Sight is not free: a body with an eye produces food more slowly than a blind one. Intelligence has to pay for itself.</p>
-					</div>
-					<div class='icon-links'>
-						<a href=https://github.com/theomgdev/AlienLifeEngine title='View the code'><i class="fa-brands fa-github"></i></a>
-						<a href=https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2 title='Built on The Life Engine by Max Robinson (GPL-3.0)'><i class="fa fa-code-branch"></i></a>
-					</div>
-				</div>
-
-				<div id='editor' class='tab'>
-					<div class='left-half' id='editor-panel'>
-						<div class='editor-buttons'>
-							<button class="edit-mode-btn select" id="select" title="Select organism from world. Hotkey: Z"><i class="fa-regular fa-hand-pointer"></i></button>
-							<button class="edit-mode-btn edit" id="edit" title="Edit organism. Hotkey: X"><i class="fa fa-pen-to-square"></i></button>
-							<button class="edit-mode-btn drop-org" id="drop-org" title="Drop organism in world. Hotkey: C"><i class="fa fa-plus"></i></button>
-							<button id="save-org" title="Save Organism"><i class="fa fa-save"></i></button>
-							<button id="load-org" title="Load Organism"><i class="fa fa-upload"></i></button>
-							<button id="reset-with-editor-org" title="Reset Environment with this Organism"><i class="fa fa-seedling"></i></button>
-							<b id="unnatural-org-warning" title="Unnatural Organism: It has overlapping cells or genetic changes that cannot evolve naturally"><i class="fa fa-biohazard"></i></i></b>
-						</div>
-						<div id='editor-env'>
-							<canvas id='editor-canvas'></canvas>
-						</div>
-						<div id='cell-selections'>
-							<div style='grid-column: 1;'>
-								<div class='cell-type' id='mouth' title="Mouth: Eats adjacent food."></div>
-								<div class='cell-type' id='producer' title="Producer: Produces adjacent food."></div>
-							</div>
-							<div style='grid-column: 2;'>
-								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
-								<div class='cell-type' id='armor' title="Armor: Negates affects of killer cell."></div>
-								<div class='cell-type' id='eye' title="Eye: Looks for cells to move away from or towards. Click again on a placed cell to rotate"></div>
+			<!-- Drawer Body (Scrollable Tabs) -->
+			<div class="drawer-body">
+				<!-- ABOUT TAB -->
+				<div id="about" class="tab">
+					<div class="tab-card-grid">
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-satellite-dish"></i> Alien Life Engine</h3>
+							<p class="card-desc">A world where every organism that can see thinks with an evolved recurrent neural network — and a quarter of that mind is not its own.</p>
+							<p class="card-desc">The shared quarter is written into a continuous spatial field around each creature and read back by everyone nearby. Nothing is taught and nothing is trained: weights are shaped by natural selection alone.</p>
+							
+							<h4 class="section-title">Cell Legend</h4>
+							<p class="card-subtext">Hover or tap any color to learn its biological function:</p>
+							<div id="cell-legend">
+								<div class="cell-legend-type" id="mouth" title="Mouth: Eats adjacent food."></div>
+								<div class="cell-legend-type" id="producer" title="Producer: Produces adjacent food. A sighted body produces more slowly."></div>
+								<div class="cell-legend-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div>
+								<div class="cell-legend-type" id="armor" title="Armor: Negates effects of killer cells."></div>
+								<div class="cell-legend-type" id="eye" title="Eye: Sees. Grants movement and thought — no separate mover organ."></div>
+								<div class="cell-legend-type" id="food" title="Food: Nourishment. Eaten food fuels reproduction."></div>
+								<div class="cell-legend-type" id="wall" title="Wall: Inert barrier. Blocks movement and births."></div>
 							</div>
 
-							<button id='clear-editor'>Clear</button>
-							<button class='randomize-button' id='generate-random' title="Randomizes organism"><i class="fa fa-random"></i></button>
-							<br>
-						</div>
-						
-					</div>
-					<div class='right-half'>
-						<div id='organism-details' style="display:none;">
-							<h3>Organism Details</h3>
-							<p class='species-name'>Species Name: </p>
-							<p class='cell-count'>Cell count: </p>
-							<p id='move-range'>Move Range: </p>
-							<p id='mutation-rate'>Mutation Rate: </p>
-							<br>
-						
-							<div class='brain-details'>
-								<h4>Brain</h4>
-								<p class='chase-types'></p>
-								<p class='retreat-types'></p>
-								<div id='mind-host'></div>
+							<div class="hive-about-hint">
+								<i class="fa fa-lightbulb"></i> Press <b>V</b> to toggle the collective field. Watch the map drift into regional cultures.
 							</div>
 						</div>
 
-						<div id='edit-organism-details' style="display:none;">
-							<h3>Edit Organism</h3>
-							<div id='species-name-cont'>
-								<label for="species-name-edit">Species Name:</label>
-								<input type="text" id="species-name-edit">
-							</div>
-							<p class='cell-count'>Cell count: </p>
-							<div id='move-range-cont'>
-								<label for="move-range-edit" title='The number of cells to move before randomly changing direction. Overriden by brain decisions.'>Move Range:</label>
-								<input type="number" id="move-range-edit" min="1" max="100" value=3 step="1">
-							</div>
-							<div id='mutation-rate-cont'>
-								<label for="mutation-rate-edit" title='Probability that offspring of this organism will mutate'>Mutation Rate:</label>
-								<input type="number" id="mutation-rate-edit" min="1" max="100" value=3 step="1">
-							</div>
-							<!-- <br> -->
-							<div class='brain-details'>
-								<h4>Brain</h4>
-								<p class='chase-types'></p>
-								<p class='retreat-types'></p>
-								<p class='about-detail'>Brains evolve by mutation; their weights cannot be hand-edited. Give an organism an eye to grant it a mind.</p>
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-brain"></i> Neural Substrate</h3>
+							<p class="about-detail">Every sighted creature carries an N&times;N fully connected recurrent network. Three quarters are private memory; one quarter is collective consciousness shared with local neighbours.</p>
+							<p class="about-detail">The state vector is normalised with RMSNorm every timestep with an inheritable gain, preventing explosion or signal decay over infinite mutation.</p>
+							<p class="about-detail">Sight is mobility: having an eye is what permits motion. Because vision bears an energetic cost, intelligence must continually pay for itself.</p>
+							
+							<div class="credits-box">
+								<a href="https://github.com/theomgdev/AlienLifeEngine" target="_blank" class="credit-link">
+									<i class="fa-brands fa-github"></i> AlienLifeEngine Source
+								</a>
+								<a href="https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2" target="_blank" class="credit-link">
+									<i class="fa fa-code-branch"></i> Fork of The Life Engine (GPL-3.0)
+								</a>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div id='world-controls' class='tab'>
-					<div class='left-half'>
-						<h3>Grid Size</h3>
-						<label for="cell-size">Cell Size:</label>
-						<input type="number" id="cell-size" min="1" max="100" value=5 step="1">
-						<label for="fill-window">Fill Window</label>
-						<input type="checkbox" id="fill-window" checked>
-						<div class='col-row-input'>
-							<label for="col-input">Columns:</label>
-							<input type="number" class="grid-size-in" id="col-input" min="1" value=100 step="1">
-							<label for="row-input">Rows:</label>
-							<input type="number" class="grid-size-in" id="row-input" min="1" value=100 step="1">
+
+				<!-- EDITOR TAB -->
+				<div id="editor" class="tab">
+					<div class="tab-card-grid">
+						<div class="ui-card" id="editor-panel">
+							<h3 class="card-title"><i class="fa fa-flask"></i> Organism Workbench</h3>
+							<div class="editor-buttons">
+								<button class="edit-mode-btn select btn-chip" id="select" title="Select organism from world. Hotkey: Z"><i class="fa-regular fa-hand-pointer"></i> Select</button>
+								<button class="edit-mode-btn edit btn-chip" id="edit" title="Draw cells on workbench. Hotkey: X"><i class="fa fa-pen-to-square"></i> Draw</button>
+								<button class="edit-mode-btn drop-org btn-chip" id="drop-org" title="Clone / Drop organism in world. Hotkey: C"><i class="fa fa-plus"></i> Drop</button>
+								<button id="save-org" class="btn-chip" title="Save Organism JSON"><i class="fa fa-save"></i> Save</button>
+								<button id="load-org" class="btn-chip" title="Load Organism JSON"><i class="fa fa-upload"></i> Load</button>
+								<button id="reset-with-editor-org" class="btn-chip" title="Seed World with this Organism"><i class="fa fa-seedling"></i> Seed</button>
+								<b id="unnatural-org-warning" title="Unnatural Organism: Overlapping or disconnected cells"><i class="fa fa-biohazard"></i> Unnatural</b>
+							</div>
+
+							<div class="workbench-viewport">
+								<div id="editor-env">
+									<canvas id="editor-canvas"></canvas>
+								</div>
+							</div>
+
+							<div id="cell-selections">
+								<div class="cell-palette-label">Cell Palette:</div>
+								<div class="palette-row">
+									<div class="cell-type" id="mouth" title="Mouth: Eats food"></div>
+									<div class="cell-type" id="producer" title="Producer: Grows food"></div>
+									<div class="cell-type" id="killer" title="Killer: Harms neighbors"></div>
+									<div class="cell-type" id="armor" title="Armor: Shields damage"></div>
+									<div class="cell-type" id="eye" title="Eye: Senses and moves (click placed eye to rotate)"></div>
+								</div>
+								<div class="workbench-actions">
+									<button id="clear-editor" class="btn-secondary"><i class="fa fa-eraser"></i> Clear</button>
+									<button class="randomize-button btn-secondary" id="generate-random" title="Generate Random Creature"><i class="fa fa-random"></i> Randomize</button>
+								</div>
+							</div>
 						</div>
-						<button id='resize'>Resize and Reset</button>
-						<h3>Reset Options</h3>
-						<label for="auto-reset">Reset on total extinction</label>
-						<input type="checkbox" id="auto-reset" checked>
-						<p id='reset-count'>Auto reset count: </p>
-						<label for="auto-pause" title='Will override reset on extinction'>Pause on total extinction</label>
-						<input type="checkbox" id="auto-pause">
-						<br>
-						<button class='randomize-button reset-random' title="Generate many random organisms in the world.">Reset with Random Organisms</button>
-						<label for="num-random-orgs" title='Number of random organisms to generate'>Num to generate:</label>
-						<input type="number" id="num-random-orgs" min="1" value=100 step="1">
-					</div>
-					<div class='right-half'>
-						<br>
-						<button id='random-walls' title="Generates random walls.">Generate random walls</button> <br>
-						<button id="clear-walls" title="Clear All Walls. Hotkey: B">Clear all walls</button>
-						<br>
-						<label for="clear-walls-reset" title='When on, walls will be cleared when the environment resets'>Clear walls on reset</label>
-						<input type="checkbox" id="clear-walls-reset">
-						<br>
-						<button id='save-env' title="Download save file for entire world">Save World</button>
-						<label for="save-env-name" title='Save World as:'>Save As:</label>
-						<input type="text" id="save-env-name" value="world" style="text-align: center;">.json
-						<br>
-						<button id='load-env' title="Load world save file">Load World</button>
-						<label for="override-controls" title='Override the current evolution controls with those from the loaded world'>Override Evolution Controls</label>
-						<input type="checkbox" id="override-controls" checked>
-					</div>
-				</div>
-				<div id='hyperparameters' class='tab'>
-					<div class='left-half'>
-						<h2>Evolution Controls</h2>
-						<label for="food-prod-prob" title='The probability that a producer cell will produce food each tick.'>Probability of producing food:</label>
-						<input type="number" id="food-prod-prob" min=".001" max="100" value=4 step="1">
-						<br>
-						<label for="lifespan-multiplier" title='An organism lives for this many ticks per cell in its body.'>Lifespan multiplier:</label>
-						<input type="number" id="lifespan-multiplier" min="1" max="10000" value=100 step="1">
-						<br>
-						<label for="rot-enabled" title='Organisms rotate when born and while moving.'>Rotation Enabled</label>
-						<input type="checkbox" id="rot-enabled" checked>
-						<br>
-						<label for="insta-kill" title='When on, killer cells immediately kill organisms they touch. When off, organisms have as much health as they have cells and only take 1 damage from killer cells.'>One touch kill</label>
-						<input type="checkbox" id="insta-kill">
-						<br>
-						<label for="look-range" title='How far an eye cell can see (in number of cells)'>Look range:</label>
-						<input type="number" id="look-range" min="1" max="50" value=20 step="1">
-						<br>
-						<label for="see-through-self" title='Allows eyes to see through an organisms own cells'>See through self:</label>
-						<input type="checkbox" id="see-through-self">
-						<br>
-						<label for="food-drop-rate" title='Rate at which food is automatically generated and dropped in the world'>Auto food drop rate:</label>
-						<input type="number" id="food-drop-rate" value=5 max="1000">
-						<br>
-						<label for="sighted-food-cost" title='Additional food a sighted (and therefore thinking) organism must collect before it can reproduce. The price of a mind.'>Cost of sight:</label>
-						<input type="number" id="sighted-food-cost" value=0 max="1000" step="1">
 
-						
-					</div>
-					<div class='right-half'>
-						<button id='reset-rules'>Reset all controls</button><br>
-						<label for="org-limit" title='Maximum number of organisms (-1 is unlimited)'>Maximum Organisms:</label>
-						<input type="number" id="org-limit" min="-1" value=-1 step="1"><br>
-						<label for="evolved-mutation" title='When on, each organism has its own mutation rate that can increase or decrease. When off, all organisms have the same mutation rate.'>Use evolved mutation rate</label>
-						<input type="checkbox" id="evolved-mutation" checked>
-						<div class="global-mutation-container">
-							<label class="global-mutation-in" for="global-mutation">Global mutation rate: </label>
-							<input class="global-mutation-in" type="number" id="global-mutation" min="0" max="100" value=5 step="1">
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-microchip"></i> Organism Inspector</h3>
+							
+							<div id="organism-details" style="display:none;">
+								<div class="inspector-badge">
+									<span class="species-name font-bold">Species: —</span>
+									<span class="cell-count badge-pill">0 cells</span>
+								</div>
+								<div class="stats-row">
+									<span id="move-range">Move Range: —</span>
+									<span id="mutation-rate">Mutation Rate: —</span>
+								</div>
+								<div class="brain-details">
+									<h4 class="section-title">Live Neural Brain</h4>
+									<p class="chase-types"></p>
+									<p class="retreat-types"></p>
+									<div id="mind-host"></div>
+								</div>
+							</div>
+
+							<div id="edit-organism-details" style="display:none;">
+								<div id="species-name-cont" class="form-row">
+									<label for="species-name-edit">Species Name:</label>
+									<input type="text" id="species-name-edit" class="ui-input">
+								</div>
+								<div class="inspector-badge">
+									<span class="cell-count badge-pill">Cell count: </span>
+								</div>
+								<div id="move-range-cont" class="form-row">
+									<label for="move-range-edit">Move Range:</label>
+									<input type="number" id="move-range-edit" min="1" max="100" value="3" step="1" class="ui-input-num">
+								</div>
+								<div id="mutation-rate-cont" class="form-row">
+									<label for="mutation-rate-edit">Mutation Rate (%):</label>
+									<input type="number" id="mutation-rate-edit" min="1" max="100" value="3" step="1" class="ui-input-num">
+								</div>
+								<div class="brain-details">
+									<h4 class="section-title">Neural Brain</h4>
+									<p class="chase-types"></p>
+									<p class="retreat-types"></p>
+									<p class="about-detail">Brains evolve solely by mutation. Add an eye cell to grant your creature vision and thought.</p>
+								</div>
+							</div>
 						</div>
-						<h4 title='When an organism mutates, it can choose from one of the following mutation types.'>Mutation Type Probabilities</h4>
-						<label for="add-prob" title='A new cell will stem from an existing one'>Add Cell:</label>
-						<input class="mut-prob" type="number" id="add-prob" min="0" max="100" value=33>
-						<label for="change-prob" title='A currently existing cell will change its color.'>Change Cell:</label>
-						<input class="mut-prob" type="number" id="change-prob" min="0" max="100" value=33>
-						<label for="remove-prob" title='An existing cell will be removed.'>Remove Cell:</label>
-						<input class="mut-prob" type="number" id="remove-prob" min="0" max="100" value=33>
-						<br/>
-						<label for="sighted-producer-rate" title='Food production rate of a sighted body, as a fraction of a blind one. At 0 an eye switches food production off entirely and thinking lineages starve out.'>Sighted production rate:</label>
-						<input type="number" id="sighted-producer-rate" value=0.75 min="0" max="1" step="0.05">
-						<br/>
-						<label for="food-blocks" title='When on, reproduction will fail if offspring intersect with food. When off, offspring will remove blocking food.'>Food blocks reproduction</label>
-						<input type="checkbox" id="food-blocks" checked>
-						<br>
-
-						<h4 title='Every organism with an eye carries an NxN recurrent neural brain, and sight is what makes it mobile. A quarter of its state vector is not private: it is read from and written back into a shared field around it, so part of every mind lives in a substrate its neighbours also think with. All of it evolves by mutation alone.'>Hive Mind</h4>
-						<label for="hive-overlay" title='Draw the collective field over the world as culture patches. Hotkey: V'>Show collective field</label>
-						<input type="checkbox" id="hive-overlay">
-						<br>
-						<label for="brain-size" title='Width of the NxN brain matrix. Bigger brains hold more behaviour but cost more per tick.'>Brain size (N):</label>
-						<input type="number" id="brain-size" min="4" max="48" value=16 step="2">
-						<br>
-						<label for="shared-frac" title='Fraction of the state vector shared with the collective. 0 = fully private minds, 1 = no private thought at all.'>Collective share:</label>
-						<input type="number" id="shared-frac" min="0" max="0.9" value=0.25 step="0.05">
-						<br>
-						<label for="collective-radius" title='How far a mind reaches into the shared field, in grid cells. Each organism reads and writes a disc this wide around itself.'>Influence radius:</label>
-						<input type="number" id="collective-radius" min="2" max="80" value=20 step="2">
-						<br>
-						<label for="collective-leak" title='Memory of the collective field. Higher means regional cultures persist longer and drift more slowly.'>Field memory:</label>
-						<input type="number" id="collective-leak" min="0" max="0.99" value=0.85 step="0.05">
-						<br>
-						<label for="brain-mutation" title='Standard deviation of the gaussian nudge applied to brain weights on mutation.'>Brain mutation rate:</label>
-						<input type="number" id="brain-mutation" min="0" max="1" value=0.08 step="0.01">
-						<br>
-						<label for="random-start" title='Start each world with a crowd of random organisms scaled to its area, instead of a single plant. Many founders means many lineages and immediate regional cultures.'>Random crowd start</label>
-						<input type="checkbox" id="random-start" checked>
-						<br>
-						<button id='save-controls' title="Save all Evolution Controls in a .json file">Save &amp; Download</button>
-						<button id='load-controls' title="Load saved Evolution Controls with a .json file">Load</button>
-						<a id="download-el" style="display: none;"></a>
-						<input id="upload-hyperparams" style="display: none;" type="file">
-					</div>
-				</div>
-				<div id='stats' class='tab'>
-					<div class='left-half'>
-						<h2>Statistics</h2>
-						<p id='org-count'>Total Population: </p>
-						<p id='species-count'>Number of Species: </p>
-						<p id='top-species'>Most Populous Species: </p>
-						<p id='largest-org'>Largest Organism Ever: </p>
-						<p id='avg-mut'>Average Mutation Rate: </p>
-						<label for="chart-option">Chart: </label>
-						<select name="chart-option" id="chart-option">
-							<option value="population">Population</option>
-							<option value="species">Species</option>
-							<option value="mut-rate">Organism Structure</option>
-							<option value="mut-rate">Mutation Rate</option>
-						</select>
-						<p id='chart-note'></p>
-					</div>
-					<div class='right-half'>
-						<div id="chartContainer"></div>
 					</div>
 				</div>
 
-				<div id='chronicle' class='tab'>
-					<div class='left-half'>
-						<h2>Chronicle</h2>
-						<p class='chronicle-sub'>What this world has lived through.</p>
-						<div id='chronicle-log'></div>
+				<!-- CHRONICLE TAB -->
+				<div id="chronicle" class="tab">
+					<div class="tab-card-grid">
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-scroll"></i> World Chronicle</h3>
+							<p class="chronicle-sub">Significant milestones recorded across epochs:</p>
+							<div id="chronicle-log"></div>
+						</div>
+
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-sitemap"></i> Deepest Lineage</h3>
+							<p class="chronicle-sub" id="lineage-sub">Traceable ancestry chain:</p>
+							<div id="lineage-tree"></div>
+
+							<h3 class="card-title mt-4"><i class="fa fa-monument"></i> Dynasties Remembered</h3>
+							<p class="chronicle-sub">Most prolific extinct lineages:</p>
+							<div id="dynasty-list"></div>
+						</div>
 					</div>
-					<div class='right-half'>
-						<h3>Deepest lineage</h3>
-						<p class='chronicle-sub' id='lineage-sub'></p>
-						<div id='lineage-tree'></div>
-						<h3>Dynasties remembered</h3>
-						<div id='dynasty-list'></div>
+				</div>
+
+				<!-- EVOLUTION & HIVE CONTROLS TAB -->
+				<div id="hyperparameters" class="tab">
+					<div class="tab-card-grid">
+						<!-- Card 1: Hive Mind Substrate -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-share-nodes"></i> Collective Hive Mind</h3>
+							<p class="card-desc">Configure the shared neural space that connects all sighted life.</p>
+							
+							<div class="form-row">
+								<label for="hive-overlay">Show Collective Field Overlay <span class="hotkey-hint">(Hotkey: V)</span></label>
+								<input type="checkbox" id="hive-overlay" class="ui-switch">
+							</div>
+							<div class="form-row">
+								<label for="brain-size">Brain Matrix Width (N):</label>
+								<input type="number" id="brain-size" min="4" max="48" value="16" step="2" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="shared-frac">Collective State Share (0.0 - 0.9):</label>
+								<input type="number" id="shared-frac" min="0" max="0.9" value="0.25" step="0.05" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="collective-radius">Perception Disc Radius (cells):</label>
+								<input type="number" id="collective-radius" min="2" max="80" value="20" step="2" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="collective-leak">Field Memory Persistence (0.0 - 0.99):</label>
+								<input type="number" id="collective-leak" min="0" max="0.99" value="0.85" step="0.05" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="brain-mutation">Brain Weight Mutation Sigma:</label>
+								<input type="number" id="brain-mutation" min="0" max="1" value="0.08" step="0.01" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="random-start">Start World with Diverse Random Crowd</label>
+								<input type="checkbox" id="random-start" checked class="ui-switch">
+							</div>
+						</div>
+
+						<!-- Card 2: Metabolism & Ecosystem -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-leaf"></i> Metabolism &amp; Nutrition</h3>
+							
+							<div class="form-row">
+								<label for="food-prod-prob">Producer Cell Growth Chance (%):</label>
+								<input type="number" id="food-prod-prob" min=".001" max="100" value="4" step="1" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="sighted-producer-rate">Sighted Food Production Efficiency:</label>
+								<input type="number" id="sighted-producer-rate" value="0.75" min="0" max="1" step="0.05" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="sighted-food-cost">Reproduction Surcharge for Sighted Life:</label>
+								<input type="number" id="sighted-food-cost" value="0" max="1000" step="1" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="food-drop-rate">Atmospheric Food Drop Rate:</label>
+								<input type="number" id="food-drop-rate" value="5" max="1000" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="lifespan-multiplier">Lifespan Multiplier (ticks/cell):</label>
+								<input type="number" id="lifespan-multiplier" min="1" max="10000" value="100" step="1" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="food-blocks">Offspring Blocked by Existing Food</label>
+								<input type="checkbox" id="food-blocks" checked class="ui-switch">
+							</div>
+						</div>
+
+						<!-- Card 3: Genetics & Mutation -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-dna"></i> Genetics &amp; Mutation</h3>
+							
+							<div class="form-row">
+								<label for="evolved-mutation">Inherit &amp; Evolve Mutation Rates</label>
+								<input type="checkbox" id="evolved-mutation" checked class="ui-switch">
+							</div>
+							<div class="global-mutation-container form-row">
+								<label class="global-mutation-in" for="global-mutation">Global Fixed Mutation Rate (%):</label>
+								<input class="global-mutation-in ui-input-num" type="number" id="global-mutation" min="0" max="100" value="5" step="1">
+							</div>
+
+							<h4 class="section-title">Anatomy Mutation Weightings</h4>
+							<div class="form-row">
+								<label for="add-prob">Add Cell Weight:</label>
+								<input class="mut-prob ui-input-num" type="number" id="add-prob" min="0" max="100" value="33">
+							</div>
+							<div class="form-row">
+								<label for="change-prob">Mutate Cell Type Weight:</label>
+								<input class="mut-prob ui-input-num" type="number" id="change-prob" min="0" max="100" value="33">
+							</div>
+							<div class="form-row">
+								<label for="remove-prob">Prune Cell Weight:</label>
+								<input class="mut-prob ui-input-num" type="number" id="remove-prob" min="0" max="100" value="33">
+							</div>
+						</div>
+
+						<!-- Card 4: Combat, Vision & Presets -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-shield-halved"></i> Physics &amp; Presets</h3>
+							
+							<div class="form-row">
+								<label for="insta-kill">One-Touch Lethal Predation</label>
+								<input type="checkbox" id="insta-kill" class="ui-switch">
+							</div>
+							<div class="form-row">
+								<label for="rot-enabled">Rotation Enabled at Birth &amp; Motion</label>
+								<input type="checkbox" id="rot-enabled" checked class="ui-switch">
+							</div>
+							<div class="form-row">
+								<label for="look-range">Eye Vision Reach (cells):</label>
+								<input type="number" id="look-range" min="1" max="50" value="20" step="1" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="see-through-self">Vision Pierces Own Anatomy</label>
+								<input type="checkbox" id="see-through-self" class="ui-switch">
+							</div>
+							<div class="form-row">
+								<label for="org-limit">Maximum Population Cap (-1 = unlimited):</label>
+								<input type="number" id="org-limit" min="-1" value="-1" step="1" class="ui-input-num">
+							</div>
+
+							<div class="button-grid mt-4">
+								<button id="save-controls" class="btn-primary" title="Export Rules to JSON"><i class="fa fa-download"></i> Save Preset</button>
+								<button id="load-controls" class="btn-secondary" title="Import Rules from JSON"><i class="fa fa-upload"></i> Load Preset</button>
+								<button id="reset-rules" class="btn-danger" title="Restore Default Settings"><i class="fa fa-rotate-left"></i> Restore Defaults</button>
+								<a id="download-el" style="display: none;"></a>
+								<input id="upload-hyperparams" style="display: none;" type="file">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- WORLD CONTROLS TAB -->
+				<div id="world-controls" class="tab">
+					<div class="tab-card-grid">
+						<!-- Card 1: Grid Dimensions -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-expand"></i> Grid Geometry</h3>
+							
+							<div class="form-row">
+								<label for="cell-size">Pixel Cell Size:</label>
+								<input type="number" id="cell-size" min="1" max="100" value="5" step="1" class="ui-input-num">
+							</div>
+							<div class="form-row">
+								<label for="fill-window">Scale to Viewport Dimensions</label>
+								<input type="checkbox" id="fill-window" checked class="ui-switch">
+							</div>
+							<div class="col-row-input">
+								<div class="form-row">
+									<label for="col-input">Columns:</label>
+									<input type="number" class="grid-size-in ui-input-num" id="col-input" min="1" value="100" step="1">
+								</div>
+								<div class="form-row">
+									<label for="row-input">Rows:</label>
+									<input type="number" class="grid-size-in ui-input-num" id="row-input" min="1" value="100" step="1">
+								</div>
+							</div>
+							<button id="resize" class="btn-primary mt-2"><i class="fa fa-up-right-and-down-left-from-center"></i> Resize and Reinitialize</button>
+						</div>
+
+						<!-- Card 2: Extinction & Seeding -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-repeat"></i> Extinction &amp; Population</h3>
+							
+							<div class="form-row">
+								<label for="auto-reset">Re-seed upon Total Extinction</label>
+								<input type="checkbox" id="auto-reset" checked class="ui-switch">
+							</div>
+							<div class="form-row">
+								<span id="reset-count" class="badge-pill">Auto reset count: 0</span>
+							</div>
+							<div class="form-row">
+								<label for="auto-pause">Pause upon Total Extinction</label>
+								<input type="checkbox" id="auto-pause" class="ui-switch">
+							</div>
+
+							<div class="form-row mt-2">
+								<label for="num-random-orgs">Batch Seed Count:</label>
+								<input type="number" id="num-random-orgs" min="1" value="100" step="1" class="ui-input-num">
+							</div>
+							<button class="randomize-button reset-random btn-secondary" title="Seed world with diverse random organisms"><i class="fa fa-shuffle"></i> Seed Random Organisms</button>
+						</div>
+
+						<!-- Card 3: Barriers & Terrain -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-cubes"></i> Terrain &amp; Barriers</h3>
+							
+							<div class="button-group">
+								<button id="random-walls" class="btn-secondary" title="Generate procedural wall clusters"><i class="fa fa-cubes-stacked"></i> Random Walls</button>
+								<button id="clear-walls" class="btn-secondary" title="Clear all walls from the grid"><i class="fa fa-trash"></i> Clear Walls</button>
+							</div>
+							<div class="form-row mt-3">
+								<label for="clear-walls-reset">Purge Walls on World Reset</label>
+								<input type="checkbox" id="clear-walls-reset" class="ui-switch">
+							</div>
+						</div>
+
+						<!-- Card 4: World Archives -->
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-floppy-disk"></i> Save &amp; Load World</h3>
+							
+							<div class="form-row">
+								<label for="save-env-name">Filename:</label>
+								<div class="inline-input-group">
+									<input type="text" id="save-env-name" value="world" class="ui-input">
+									<span class="input-suffix">.json</span>
+								</div>
+							</div>
+							<button id="save-env" class="btn-primary" title="Export complete simulation state"><i class="fa fa-download"></i> Save World Snapshot</button>
+							
+							<div class="form-row mt-4">
+								<label for="override-controls">Override Evolution Controls on Load</label>
+								<input type="checkbox" id="override-controls" checked class="ui-switch">
+							</div>
+							<button id="load-env" class="btn-secondary" title="Load world from JSON"><i class="fa fa-upload"></i> Load World File</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- STATISTICS TAB -->
+				<div id="stats" class="tab">
+					<div class="tab-card-grid">
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-chart-simple"></i> Ecological Census</h3>
+							
+							<div class="census-grid">
+								<div class="census-stat">
+									<span class="census-label">Total Population</span>
+									<span id="org-count" class="census-val">0</span>
+								</div>
+								<div class="census-stat">
+									<span class="census-label">Active Species</span>
+									<span id="species-count" class="census-val">0</span>
+								</div>
+								<div class="census-stat col-span-2">
+									<span class="census-label">Dominant Lineage</span>
+									<span id="top-species" class="census-val">None</span>
+								</div>
+								<div class="census-stat">
+									<span class="census-label">Largest Organism</span>
+									<span id="largest-org" class="census-val">0 cells</span>
+								</div>
+								<div class="census-stat">
+									<span class="census-label">Average Mutability</span>
+									<span id="avg-mut" class="census-val">0</span>
+								</div>
+							</div>
+
+							<div class="form-row mt-4">
+								<label for="chart-option">Display Chart Metric:</label>
+								<select name="chart-option" id="chart-option" class="ui-select">
+									<option value="population">Population Dynamics</option>
+									<option value="species">Species Richness</option>
+									<option value="mut-rate">Organism Structure</option>
+									<option value="mut-rate">Mutation Rate Drift</option>
+								</select>
+							</div>
+							<p id="chart-note" class="card-subtext"></p>
+						</div>
+
+						<div class="ui-card">
+							<h3 class="card-title"><i class="fa fa-chart-area"></i> Telemetry Chart</h3>
+							<div id="chartContainer" class="chart-box"></div>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class='load-panel'>
+		</aside>
+
+		<!-- COMMUNITY CREATIONS MODAL -->
+		<div class="load-panel">
 			<div class="load-panel-title">
-				<button id='close-load-btn'><i class="fa fa-times"></i></button>
-				<h1>Community Creations</h1>
-			</div><br>
+				<h2><i class="fa fa-users"></i> Community Creations</h2>
+				<button id="close-load-btn" class="modal-close-btn"><i class="fa fa-times"></i></button>
+			</div>
 			<div class="all-list-container">
 				<div class="list-title-container">
-					<h2>🌍Worlds</h2>
+					<h3>🌍 Worlds</h3>
 					<div id="worlds-list-container" class="list-container">
 						<ul id="worlds-list"></ul>
 					</div>
 				</div>
 				<div class="list-title-container">
-					<h2>🦠Organisms</h2>
+					<h3>🦠 Organisms</h3>
 					<div id="organisms-list-container" class="list-container">
 						<ul id="organisms-list"></ul>
 					</div>
 				</div>
 				<div class="list-title-container">
-					<h2>🔧Mods</h2>
+					<h3>🔧 Mods</h3>
 					<div id="mods-list-container" class="list-container">
 						<ul id="mods-list"></ul>
 					</div>
@@ -342,29 +610,15 @@
 			</div>
 			<input id="upload-json" style="display: none;" type="file">
 		</div>
-		<div class='community-section'>
-			<button id="community-creations-btn" title="See worlds and organisms made by the community">Community Creations <i class="fa fa-users"></i></button>
-		</div>
-		<div class='hot-controls'>
-			<button class="reset-view" title="Reset View. Hotkey: A"><i class="fa fa-video-camera"></i></button>
-			<button class="edit-mode-btn drag-view" id="drag-view" title="Drag View. Hotkey: S"><i class="fa fa-arrows"></i></button>
-			<button class="edit-mode-btn wall-drop" id="wall-drop" title="Drop/Remove Wall. Hotkey: D"><i class="fa fa-th"></i></button>
-			<button class="edit-mode-btn food-drop selected" id="food-drop" title="Drop/Remove Food. Hotkey: F"><i class="fa fa-cutlery"></i></button>
-			<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
-			<button class="headless" title="Toggle rendering. Hotkey: H"><i class="fa fa-eye-slash"></i></button>
-			<button class='pause-button' title="Play/Pause. Hotkey: Spacebar"><i class="fa fa-pause"></i></button>
-		</div>
+
+		<!-- Headless Mode Icon Indicator -->
 		<div id="headless-notification">
-			<i class="fa fa-eye-slash" ></i>
+			<i class="fa fa-eye-slash"></i>
 		</div>
-		<div id="hive-hint">
-			<span class="hive-hint-dot"></span>
-			<span class="hive-hint-text">Every organism with an eye thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
-			<button id="hive-hint-close" title="Dismiss">&times;</button>
-		</div>
-		<div id='maximize-hot-control' class='hot-controls'>
-			<button id="maximize" title="Show Control Panel."><i class="fa fa-plus-square"></i></button>
-		</div>
-		
+
+		<!-- Backwards compatibility stubs for legacy JS calls -->
+		<div id="maximize-hot-control" style="display: none;"></div>
+		<div class="hot-controls" style="display: none;"></div>
+		<p id="fps" style="display: none;">Target FPS: 60</p>
 	</body>
 </html>
