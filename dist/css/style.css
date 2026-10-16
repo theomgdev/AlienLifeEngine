@@ -540,3 +540,9 @@ input:hover,input:active {
 
 .dyn-name { color: #c6cfdb; }
 .dyn-stat { color: #68727f; font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* tick number and text need air between them, and the generation marker
+   must not run into the species name */
+.chron-tick { min-width: 52px; text-align: right; }
+.lin-name   { margin-right: 4px; }
+.lin-gen    { opacity: 0.75; }

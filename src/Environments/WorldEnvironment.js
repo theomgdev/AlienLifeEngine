@@ -109,6 +109,10 @@ class WorldEnvironment extends Environment{
             this.organisms.splice(i, 1);
         }
         if (this.organisms.length === 0 && start_pop > 0) {
+            // Record the extinction BEFORE anything restarts the world: reset()
+            // wipes total_ticks and the species record, so a chronicle entry
+            // written afterwards cannot know how long this life lasted.
+            if (this.chronicle) this.chronicle.extinction(this.total_ticks);
             if (WorldConfig.auto_pause)
                 $('.pause-button')[0].click();
             else if(WorldConfig.auto_reset) {
@@ -269,6 +273,11 @@ class WorldEnvironment extends Environment{
         this.grid_map.fillGrid(CellStates.empty, !WorldConfig.clear_walls_on_reset);
         this.renderer.renderFullGrid(this.grid_map.grid);
         this.total_mutability = 0;
+        // A world's own clock restarts, but its history does not: the chronicle
+        // keeps a monotonic clock so entries from before an extinction stay in
+        // order, and auto_reset is recorded as the end of an epoch rather than
+        // silently rewinding every timestamp to zero.
+        if (this.chronicle) this.chronicle.endEpoch(this.total_ticks);
         this.total_ticks = 0;
         // A fresh world gets a fresh hive mind: no weights and no culture survive.
         this.initHiveMind();
