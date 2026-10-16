@@ -96,7 +96,7 @@ class Renderer {
             data[p] = rgb[0];
             data[p + 1] = rgb[1];
             data[p + 2] = rgb[2];
-            data[p + 3] = Math.min(190, 24 + intensity * 460) | 0;
+            data[p + 3] = Math.min(133, 17 + intensity * 322) | 0;
         }
 
         const ctx = o.ctx;

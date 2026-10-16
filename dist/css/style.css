@@ -310,6 +310,7 @@ html, body {
     bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
+    will-change: auto;
     z-index: 50;
     display: inline-flex;
     align-items: center;
@@ -399,7 +400,17 @@ html, body {
 }
 
 .dock-speed-val {
-    min-width: 50px;
+    /* Fixed width + tabular figures: "Actual FPS: 7" -> "MAX" -> "Actual FPS: 122"
+       changes digit count every frame, and without a reserved box the whole dock
+       re-centres on each change, which reads as a shiver. */
+    width: 106px;
+    min-width: 106px;
+    flex: 0 0 106px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
     color: var(--text-primary);
     font-weight: 600;
 }
@@ -1436,3 +1447,71 @@ input[type="checkbox"].ui-switch:checked::after {
         transform: translateY(0);
     }
 }
+
+/* ---- Chronicle rows (dark theme) --------------------------------------- */
+.chron-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    background: rgba(14, 19, 24, 0.7);
+    border: 1px solid var(--card-border);
+    border-left: 3px solid var(--accent-cyan);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+
+.chron-icon {
+    flex: 0 0 auto;
+    font-size: 12px;
+    /* The icon and the tick number were sitting flush against each other. */
+    margin-right: 8px;
+}
+
+.chron-tick {
+    flex: 0 0 auto;
+    min-width: 56px;
+    text-align: right;
+    margin-right: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.chron-text { color: var(--text-primary); font-weight: 500; }
+
+.chron-genesis    { border-left-color: #16a34a; } .chron-genesis    .chron-icon { color: #4ade80; }
+.chron-first      { border-left-color: #d97706; } .chron-first      .chron-icon { color: #fbbf24; }
+.chron-mind       { border-left-color: #2563eb; } .chron-mind       .chron-icon { color: #60a5fa; }
+.chron-culture    { border-left-color: #7c3aed; } .chron-culture    .chron-icon { color: #a78bfa; }
+.chron-boom       { border-left-color: #059669; } .chron-boom       .chron-icon { color: #34d399; }
+.chron-famine     { border-left-color: #ea580c; } .chron-famine     .chron-icon { color: #fb923c; }
+.chron-bottleneck { border-left-color: #ca8a04; } .chron-bottleneck .chron-icon { color: #facc15; }
+.chron-dynasty    { border-left-color: #64748b; } .chron-dynasty    .chron-icon { color: #cbd5e1; }
+.chron-record     { border-left-color: #0284c7; } .chron-record     .chron-icon { color: #38bdf8; }
+.chron-apocalypse { border-left-color: #dc2626; background: rgba(127, 29, 29, 0.25); }
+.chron-apocalypse .chron-icon { color: #f87171; }
+
+.chronicle-empty { color: var(--text-dim); font-style: italic; font-size: 12.5px; }
+
+.lin-row { padding: 3px 0; color: var(--text-secondary); white-space: nowrap; }
+.lin-alive .lin-name { color: var(--accent-life); font-weight: 700; }
+.lin-branch { color: var(--text-dim); margin-right: 4px; }
+.lin-name { color: var(--text-primary); font-weight: 600; margin-right: 4px; }
+.lin-gen { color: var(--text-dim); font-size: 11px; font-weight: 600; }
+
+.dyn-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.dyn-row:last-child { border-bottom: none; }
+.dyn-name { color: var(--text-primary); font-weight: 600; }
+.dyn-stat { color: var(--text-dim); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
