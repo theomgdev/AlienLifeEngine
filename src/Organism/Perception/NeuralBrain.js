@@ -30,6 +30,18 @@
 // Everything here is evolved. No gradients, no reward signal, no backprop.
 
 const Hyperparams = require('../../Hyperparameters');
+const { ACTIONS } = require('./BrainShape');
+
+// What think() tells the organism it wants. Returned instead of a bare boolean
+// because a brain can now ask for things that are not "I turned": standing still
+// and backing up are decisions, and the caller must be able to tell them from
+// indecision — otherwise the fallback logic would rotate a creature that
+// deliberately chose to hold position.
+const INTENT_NONE    = 0;   // no strong opinion; carry on
+const INTENT_TURNED  = 1;   // picked a new heading
+const INTENT_HALT    = 2;   // stay put this tick
+const INTENT_REVERSE = 3;   // move against the current heading
+
 const RNG = require('../../Utils/RNG');
 const Directions = require('../Directions');
 
@@ -157,10 +169,9 @@ class NeuralBrain {
         }
 
         // --- action readout: a = Wout h' --------------------------------------
-        // action_n-1 directional channels + 1 "hold course" channel. The whole of
-        // h' feeds every action, so memory and perception both reach the decision.
+        // The whole of h' feeds every action, so memory and perception both reach
+        // the decision. Channels: 0-3 headings, 4 hold, 5 halt, 6 reverse.
         let best = -Infinity, bestIdx = -1;
-        const holdIdx = action_n - 1;
         for (let a = 0; a < action_n; a++) {
             let sum = 0;
             const rowOff = outOff + a * N;
@@ -168,12 +179,22 @@ class NeuralBrain {
             if (sum > best) { best = sum; bestIdx = a; }
         }
         this.last_output = best;
+        this.last_action = bestIdx;
 
-        if (bestIdx === holdIdx || best < Hyperparams.brainActionThreshold) {
-            return false;   // no strong opinion: keep doing what you were doing
+        // Below threshold the brain has no strong opinion: carry on as before.
+        if (best < Hyperparams.brainActionThreshold) return INTENT_NONE;
+
+        switch (bestIdx) {
+            case ACTIONS.HALT:
+                return INTENT_HALT;
+            case ACTIONS.REVERSE:
+                return INTENT_REVERSE;
+            case ACTIONS.HOLD:
+                return INTENT_NONE;
+            default:
+                org.changeDirection(bestIdx);   // 0..3 map onto Directions.up..left
+                return INTENT_TURNED;
         }
-        org.changeDirection(bestIdx);   // 0..3 map onto Directions.up..left
-        return true;
     }
 
     /** Snapshot of live activations, for the brain inspector UI. */
@@ -263,3 +284,7 @@ class NeuralBrain {
 }
 
 module.exports = NeuralBrain;
+module.exports.INTENT_NONE = INTENT_NONE;
+module.exports.INTENT_TURNED = INTENT_TURNED;
+module.exports.INTENT_HALT = INTENT_HALT;
+module.exports.INTENT_REVERSE = INTENT_REVERSE;

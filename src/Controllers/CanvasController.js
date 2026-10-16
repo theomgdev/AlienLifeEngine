@@ -23,13 +23,13 @@ class CanvasController{
 
     defineEvents() {
         this.canvas.addEventListener('mousemove', e => {
-            this.updateMouseLocation(e.offsetX, e.offsetY)
+            this.updateMouseLocation(e.offsetX, e.offsetY, e.clientX, e.clientY)
             this.mouseMove();
         });
 
         this.canvas.addEventListener('mouseup', function(evt) {
             evt.preventDefault();
-            this.updateMouseLocation(evt.offsetX, evt.offsetY)
+            this.updateMouseLocation(evt.offsetX, evt.offsetY, evt.clientX, evt.clientY)
             this.mouseUp();
             if (evt.button == 0) 
                 this.left_click = false;
@@ -41,7 +41,7 @@ class CanvasController{
 
         this.canvas.addEventListener('mousedown', function(evt) {
             evt.preventDefault();
-            this.updateMouseLocation(evt.offsetX, evt.offsetY)
+            this.updateMouseLocation(evt.offsetX, evt.offsetY, evt.clientX, evt.clientY)
             if (evt.button == 0) 
                 this.left_click = true;
             if (evt.button == 1) 
@@ -68,21 +68,35 @@ class CanvasController{
             this.right_click  = !!(evt.buttons & 2);
             this.middle_click = !!(evt.buttons & 4);
 
-            this.updateMouseLocation(evt.offsetX, evt.offsetY);
-            this.start_x = this.mouse_x;
-            this.start_y = this.mouse_y;
+            this.updateMouseLocation(evt.offsetX, evt.offsetY, evt.clientX, evt.clientY);
+            this.start_x = this.view_x;
+            this.start_y = this.view_y;
 
 
         }.bind(this))
 
     }
 
-    updateMouseLocation(offsetX, offsetY) {
+    /**
+     * @param offsetX/offsetY  canvas-relative, for picking cells
+     * @param clientX/clientY  viewport-relative, for dragging
+     *
+     * Dragging must not use the offset coords: panning moves the canvas, which
+     * changes offsetX for a cursor that never moved, so the measured delta feeds
+     * back into itself and alternates 0, d, 0, d — the canvas travels half the
+     * distance and visibly twitches left/right.
+     * Measured in Research/harness/ux_probe/pan_feedback.js
+     */
+    updateMouseLocation(offsetX, offsetY, clientX, clientY) {
         var prev_cell = this.cur_cell;
         var prev_org = this.cur_org;
 
         this.mouse_x = offsetX;
         this.mouse_y = offsetY;
+        if (clientX !== undefined) {
+            this.view_x = clientX;
+            this.view_y = clientY;
+        }
         var colRow = this.env.grid_map.xyToColRow(this.mouse_x, this.mouse_y);
         this.mouse_c = colRow[0];
         this.mouse_r = colRow[1];

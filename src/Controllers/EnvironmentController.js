@@ -89,8 +89,8 @@ class EnvironmentController extends CanvasController{
         }
     }
 
-    updateMouseLocation(offsetX, offsetY){
-        super.updateMouseLocation(offsetX, offsetY);
+    updateMouseLocation(offsetX, offsetY, clientX, clientY){
+        super.updateMouseLocation(offsetX, offsetY, clientX, clientY);
     }
 
     mouseMove() {
@@ -98,8 +98,9 @@ class EnvironmentController extends CanvasController{
     }
 
     mouseDown() {
-        this.start_x = this.mouse_x;
-        this.start_y = this.mouse_y;
+        // anchor the drag in the same coordinate space dragScreen() measures in
+        this.start_x = this.view_x;
+        this.start_y = this.view_y;
         this.performModeAction();
     }
 
@@ -165,14 +166,18 @@ class EnvironmentController extends CanvasController{
     }
 
     dragScreen() {
+        // Viewport coords, not canvas offsets: see CanvasController.updateMouseLocation.
+        if (this.view_x === undefined) return;
+        if (this.start_x === undefined) { this.start_x = this.view_x; this.start_y = this.view_y; }
+        var dx = (this.view_x - this.start_x) * this.scale;
+        var dy = (this.view_y - this.start_y) * this.scale;
+        if (dx === 0 && dy === 0) return;
         var cur_top = parseFloat($('#env-canvas').css('top')) || 0;
         var cur_left = parseFloat($('#env-canvas').css('left')) || 0;
-        var dx = (this.mouse_x - this.start_x) * this.scale;
-        var dy = (this.mouse_y - this.start_y) * this.scale;
         $('#env-canvas').css('top', (cur_top + dy) + 'px');
         $('#env-canvas').css('left', (cur_left + dx) + 'px');
-        this.start_x = this.mouse_x;
-        this.start_y = this.mouse_y;
+        this.start_x = this.view_x;
+        this.start_y = this.view_y;
         if (this.env.renderer && this.env.renderer.syncOverlayTransform)
             this.env.renderer.syncOverlayTransform();
     }

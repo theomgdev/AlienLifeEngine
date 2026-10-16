@@ -2,21 +2,19 @@
 //
 // Kept out of ControlPanel.js deliberately: that file is already a 536-line god
 // object, and the hive is the one feature most likely to grow more knobs. It owns
-// the hotbar toggle, the Evolution Controls section, the hotkey and the first-run
-// hint, so there is exactly one place to look when the collective misbehaves.
+// the hotbar toggle, the Evolution Controls section and the hotkey, so there is
+// exactly one place to look when the collective misbehaves.
 
 const WorldConfig = require("../WorldConfig");
 const Hyperparams = require("../Hyperparameters");
 const { BRAIN_LIMITS, clampBrainShape, clampFieldParams, clampNum } = require('../Organism/Perception/BrainShape');
 
-const HINT_KEY = "alien_hive_hint_seen";
 
 class HiveControls {
     constructor(engine) {
         this.engine = engine;
         this.defineOverlayToggle();
         this.defineHiveParams();
-        this.defineHint();
         this.loadValuesFromParams();
     }
 
@@ -35,7 +33,6 @@ class HiveControls {
             renderer.clearCollectiveOverlay();
         }
         this.syncUI();
-        this.dismissHint();
     }
 
     toggleOverlay() {
@@ -223,28 +220,6 @@ class HiveControls {
         this.syncUI();
     }
 
-    // ---- first-run hint --------------------------------------------------
-
-    defineHint() {
-        $('#hive-hint-close').click(() => this.dismissHint(true));
-        let seen = false;
-        try { seen = window.localStorage.getItem(HINT_KEY) === '1'; } catch (e) { /* private mode */ }
-        if (seen) return;
-        // Let the world fill in first — a hint over an empty grid means nothing.
-        this._hintTimer = setTimeout(() => {
-            if (!WorldConfig.show_collective_field) {
-                $('#hive-hint').addClass('visible').css('display', 'inline-flex');
-            }
-        }, 4000);
-    }
-
-    dismissHint(permanent = false) {
-        if (this._hintTimer) { clearTimeout(this._hintTimer); this._hintTimer = null; }
-        $('#hive-hint').removeClass('visible').css('display', 'none');
-        if (permanent) {
-            try { window.localStorage.setItem(HINT_KEY, '1'); } catch (e) { /* ignore */ }
-        }
-    }
 }
 
 module.exports = HiveControls;

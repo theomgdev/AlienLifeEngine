@@ -197,56 +197,9 @@ html, body {
 }
 
 /* Center Toast: Hive Hint */
-#hive-hint.visible {
-    display: inline-flex !important;
-}
-
-#hive-hint {
-    background: rgba(18, 24, 33, 0.9);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(21, 222, 89, 0.3);
-    border-radius: var(--radius-full);
-    padding: 6px 14px;
-    display: none;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #e5e7eb;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 16px rgba(21, 222, 89, 0.15);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    max-width: 480px;
-}
-
-.hive-hint-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent-life);
-    box-shadow: 0 0 8px var(--accent-life);
-    animation: pulseGlow 2s infinite ease-in-out;
-}
-
 @keyframes pulseGlow {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-#hive-hint-close {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 16px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 2px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#hive-hint-close:hover {
-    color: #fff;
 }
 
 /* Right HUD Buttons */
@@ -1061,8 +1014,8 @@ input[type="checkbox"].ui-switch:checked::after {
 #chronicle-log {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 400px;
+    gap: 0;
+    max-height: 420px;
     overflow-y: auto;
     padding-right: 4px;
 }
@@ -1303,14 +1256,7 @@ input[type="checkbox"].ui-switch:checked::after {
 }
 
 @media (max-width: 1024px) {
-    #hive-hint.visible {
-    display: inline-flex !important;
-}
-
-#hive-hint {
-        display: none !important;
     }
-}
 
 @media (max-width: 768px) {
     .hotkey-hint {
@@ -1449,26 +1395,29 @@ input[type="checkbox"].ui-switch:checked::after {
 }
 
 /* ---- Chronicle rows (dark theme) --------------------------------------- */
+/* The chronicle is a log, so it reads as one continuous list rather than a stack
+   of separate cards: no gap, no per-row outline, hairline separators between
+   entries, and the coloured left border running unbroken down the whole column.
+   Vertical padding is halved (8px -> 4px) and the inter-row margin removed, which
+   roughly doubles how much history fits without the rows touching. */
 .chron-row {
     display: flex;
     align-items: baseline;
     gap: 4px;
-    padding: 8px 12px;
-    margin-bottom: 4px;
-    background: rgba(14, 19, 24, 0.7);
-    border: 1px solid var(--card-border);
+    padding: 4px 10px;
+    background: rgba(14, 19, 24, 0.55);
     border-left: 3px solid var(--accent-cyan);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 12.5px;
-    line-height: 1.45;
+    line-height: 1.4;
     color: var(--text-secondary);
 }
 
 .chron-icon {
     flex: 0 0 auto;
-    font-size: 12px;
+    font-size: 11.5px;
     /* The icon and the tick number were sitting flush against each other. */
-    margin-right: 8px;
+    margin-right: 7px;
 }
 
 .chron-tick {
@@ -1482,6 +1431,10 @@ input[type="checkbox"].ui-switch:checked::after {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
 }
+
+.chron-row:first-child { border-top-right-radius: var(--radius-sm); }
+.chron-row:last-child  { border-bottom-right-radius: var(--radius-sm); border-bottom: none; }
+.chron-row:hover { background: rgba(21, 222, 89, 0.06); }
 
 .chron-text { color: var(--text-primary); font-weight: 500; }
 

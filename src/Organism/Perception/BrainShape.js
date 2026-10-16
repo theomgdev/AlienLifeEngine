@@ -14,8 +14,24 @@
 
 const SensoryVector = require('./SensoryVector');
 
-// 4 directions + 1 "hold course".
-const ACTION_N = 5;
+// Action space: 4 absolute headings + hold course + halt + reverse.
+//
+// The four headings and "hold" alone leave two gaps a real animal does not have.
+// A creature that wants to stay put has to spend every tick re-choosing a
+// heading it then walks along, and one that wants to back out of a dead end has
+// to turn around (two ticks facing the wrong way) because there is no way to
+// say "same facing, opposite travel". Both are cheap to express and expensive
+// to evolve around, so they get their own channels: HALT keeps the body still
+// while the brain keeps thinking, REVERSE moves against the current heading
+// without turning the body.
+const ACTIONS = {
+    UP: 0, DOWN: 1, RIGHT: 2, LEFT: 3,
+    HOLD: 4,      // keep the current heading and keep moving
+    HALT: 5,      // stay in place this tick
+    REVERSE: 6,   // travel opposite the current heading, body unturned
+};
+const ACTION_N = 7;
+const ACTION_NAMES = ['up', 'down', 'right', 'left', 'hold', 'halt', 'reverse'];
 
 // Sense channel count is owned by SensoryVector; the brain just needs the width.
 const SENSE_N = SensoryVector.CHANNELS;
@@ -125,4 +141,5 @@ function clampFieldParams(radius, leak, tile_size) {
     return { radius: r.value, leak: lk.value, tile_size: t.value, adjusted };
 }
 
-module.exports = { BRAIN_LIMITS, ACTION_N, SENSE_N, clampBrainShape, clampFieldParams, clampNum };
+module.exports = { BRAIN_LIMITS, ACTION_N, ACTIONS, ACTION_NAMES, SENSE_N,
+                   clampBrainShape, clampFieldParams, clampNum };

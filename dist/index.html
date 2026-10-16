@@ -42,11 +42,6 @@
 			</div>
 
 			<!-- Hive Mind Notification Toast (Centered at Top) -->
-			<div id="hive-hint">
-				<span class="hive-hint-dot"></span>
-				<span class="hive-hint-text">Every organism with an eye thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
-				<button id="hive-hint-close" title="Dismiss">&times;</button>
-			</div>
 
 			<div class="hud-right">
 				<button class="hud-btn hive-toggle" id="hive-toggle" title="Toggle Hive Mind collective field. Hotkey: V">
@@ -177,7 +172,7 @@
 							<p class="card-subtext">Hover or tap any color to learn its biological function:</p>
 							<div id="cell-legend">
 								<div class="cell-legend-type" id="mouth" title="Mouth: Eats adjacent food."></div>
-								<div class="cell-legend-type" id="producer" title="Producer: Produces adjacent food. A sighted body produces more slowly."></div>
+								<div class="cell-legend-type" id="producer" title="Producer: photosynthesises food into an adjacent empty cell. Sighted bodies produce at the Sighted Photosynthesis Multiplier (0 by default: eyes mean you must hunt)."></div>
 								<div class="cell-legend-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div>
 								<div class="cell-legend-type" id="armor" title="Armor: Negates effects of killer cells."></div>
 								<div class="cell-legend-type" id="eye" title="Eye: Sees. Grants movement and thought — no separate mover organ."></div>
@@ -233,7 +228,7 @@
 								<div class="cell-palette-label">Cell Palette:</div>
 								<div class="palette-row">
 									<div class="cell-type" id="mouth" title="Mouth: Eats food"></div>
-									<div class="cell-type" id="producer" title="Producer: Grows food"></div>
+									<div class="cell-type" id="producer" title="Producer: photosynthesises food into an adjacent empty cell"></div>
 									<div class="cell-type" id="killer" title="Killer: Harms neighbors"></div>
 									<div class="cell-type" id="armor" title="Armor: Shields damage"></div>
 									<div class="cell-type" id="eye" title="Eye: Senses and moves (click placed eye to rotate)"></div>
@@ -344,7 +339,7 @@
 								<input type="number" id="collective-leak" min="0" max="0.99" value="0.85" step="0.05" class="ui-input-num">
 							</div>
 							<div class="form-row">
-								<label for="brain-mutation">Brain Weight Mutation Sigma:</label>
+								<label for="brain-mutation">Brain Weight Mutation Strength:</label>
 								<input type="number" id="brain-mutation" min="0" max="1" value="0.08" step="0.01" class="ui-input-num">
 							</div>
 							<div class="form-row">
@@ -358,19 +353,19 @@
 							<h3 class="card-title"><i class="fa fa-leaf"></i> Metabolism &amp; Nutrition</h3>
 							
 							<div class="form-row">
-								<label for="food-prod-prob">Producer Cell Growth Chance (%):</label>
+								<label for="food-prod-prob">Photosynthesis Rate (% per tick):</label>
 								<input type="number" id="food-prod-prob" min=".001" max="100" value="4" step="1" class="ui-input-num">
 							</div>
 							<div class="form-row">
-								<label for="sighted-producer-rate">Sighted Food Production Efficiency:</label>
+								<label for="sighted-producer-rate">Sighted Photosynthesis Multiplier:</label>
 								<input type="number" id="sighted-producer-rate" value="0" min="0" max="1" step="0.05" class="ui-input-num">
 							</div>
 							<div class="form-row">
-								<label for="sighted-food-cost">Reproduction Surcharge for Sighted Life:</label>
+								<label for="sighted-food-cost">Sighted Reproduction Cost Multiplier:</label>
 								<input type="number" id="sighted-food-cost" value="0" max="1000" step="1" class="ui-input-num">
 							</div>
 							<div class="form-row">
-								<label for="food-drop-rate">Atmospheric Food Drop Rate:</label>
+								<label for="food-drop-rate">Free Food Spawn Chance (% per tick):</label>
 								<input type="number" id="food-drop-rate" value="0" max="1000" class="ui-input-num">
 							</div>
 							<div class="form-row">
@@ -398,15 +393,15 @@
 
 							<h4 class="section-title">Anatomy Mutation Weightings</h4>
 							<div class="form-row">
-								<label for="add-prob">Add Cell Weight:</label>
+								<label for="add-prob">Grow New Cell (relative weight):</label>
 								<input class="mut-prob ui-input-num" type="number" id="add-prob" min="0" max="100" value="33">
 							</div>
 							<div class="form-row">
-								<label for="change-prob">Mutate Cell Type Weight:</label>
+								<label for="change-prob">Change Cell Type (relative weight):</label>
 								<input class="mut-prob ui-input-num" type="number" id="change-prob" min="0" max="100" value="33">
 							</div>
 							<div class="form-row">
-								<label for="remove-prob">Prune Cell Weight:</label>
+								<label for="remove-prob">Remove Cell (relative weight):</label>
 								<input class="mut-prob ui-input-num" type="number" id="remove-prob" min="0" max="100" value="33">
 							</div>
 						</div>

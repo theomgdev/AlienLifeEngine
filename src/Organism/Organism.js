@@ -164,10 +164,17 @@ class Organism {
         return (RNG.random() * 100) < prob;
     }
 
-    attemptMove() {
+    /**
+     * Step one cell along the current heading.
+     * @param reverse  travel opposite the heading without turning the body —
+     *                 backing out of a dead end instead of spending two ticks
+     *                 turning around while still facing the thing it fled.
+     */
+    attemptMove(reverse = false) {
         var direction = Directions.scalars[this.direction];
-        var direction_c = direction[0];
-        var direction_r = direction[1];
+        var sign = reverse ? -1 : 1;
+        var direction_c = direction[0] * sign;
+        var direction_r = direction[1] * sign;
         var new_c = this.c + direction_c;
         var new_r = this.r + direction_r;
         if (this.isClear(new_c, new_r)) {
@@ -313,8 +320,22 @@ class Organism {
         if (this.anatomy.is_mover) {
             this.move_count++;
             const senses = SensoryVector.build(this, this.observations);
-            const changed_dir = this.brain.think(senses);
-            const moved = this.attemptMove();
+            const intent = this.brain.think(senses);
+
+            // A halt is a decision, not a failure to decide: the body stays put,
+            // the brain keeps running, and none of the stuck-detection fallback
+            // fires. Without this a creature that wanted to sit still would be
+            // rotated away by the "didn't move" branch below every single tick.
+            if (intent === NeuralBrain.INTENT_HALT) {
+                this.move_count = 0;
+                return this.living;
+            }
+
+            const moved = intent === NeuralBrain.INTENT_REVERSE
+                ? this.attemptMove(true)
+                : this.attemptMove();
+
+            const changed_dir = intent === NeuralBrain.INTENT_TURNED;
             // No ignore_brain_for here. That existed to stop the stateless table
             // brain grinding against a wall it had locked onto; a recurrent net
             // routes around obstacles itself, and blinding it would destroy that.
