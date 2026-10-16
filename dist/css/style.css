@@ -546,3 +546,36 @@ input:hover,input:active {
 .chron-tick { min-width: 52px; text-align: right; }
 .lin-name   { margin-right: 4px; }
 .lin-gen    { opacity: 0.75; }
+
+/* ---- identity ---------------------------------------------------------- */
+
+.wordmark {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    color: #cfd8e3;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.wordmark-accent {
+    font-weight: 700;
+    color: #6fe3c4;
+    letter-spacing: 3px;
+}
+
+.about-detail {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #aab4c0;
+}
+
+.hive-about-hint {
+    font-size: 13px;
+    color: #8b97a6;
+    border-left: 3px solid #6fe3c4;
+    padding-left: 8px;
+}
+
+.hive-about-hint b { color: #9fe8ff; }

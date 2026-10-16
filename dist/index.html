@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>The Life Engine</title>
+		<title>Alien Life Engine</title>
 		<link rel="icon" href="./img/icon.png">
 		<link rel="stylesheet" href="./css/style.css">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
@@ -24,7 +24,7 @@
 					<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
 					<button class="hive-toggle" id="hive-toggle" title="Show the Hive Mind — the collective field every thinking organism shares. Hotkey: V"><i class="fa fa-share-alt"></i></button>
 				</div>
-				<img src="./img/title.png" alt="Life Engine">
+				<h1 class="wordmark">ALIEN<span class="wordmark-accent">LIFE</span>ENGINE</h1>
 				<h3>Simulation Speed</h3>
 				<input id="slider" type="range" min="1" max="300" value="60">
 				<button class='pause-button' title="Play/Pause. Hotkey: Spacebar"><i class="fa fa-pause"></i></button>
@@ -53,27 +53,30 @@
 
 				<div id='about' class='tab'>
 					<div class='left-half'>
-						<h3>The Life Engine</h3>
-						<p>The Life Engine is a virtual ecosystem that allows organisms to reproduce, compete, and evolve.</p>
+						<h3>Alien Life Engine</h3>
+						<p>A world where every organism that can see thinks with an evolved neural brain — and a quarter of that mind is not its own.</p>
+						<p>The shared quarter is written into a field around each creature and read back by everyone nearby. Nothing is taught and nothing is trained: the weights are shaped by selection alone. Watch long enough and regions of the map drift into different collective states — cultures, with borders.</p>
 						<p>Each organism is made up of different colored cells. Hover over each color to learn what it does.</p>
 						<div id='cell-legend'>
 							<div class='cell-legend-type' id='mouth' title="Mouth: Eats adjacent food."></div>
-							<div class='cell-legend-type' id='producer' title="Producer: Produces adjacent food."></div>
+							<div class='cell-legend-type' id='producer' title="Producer: Produces adjacent food. A sighted body produces more slowly."></div>
 							<div class='cell-legend-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
 							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
-							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
+							<div class='cell-legend-type' id='eye' title="Eye: Sees. Grants movement and a thinking brain — there is no separate mover cell."></div>
 							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
 							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
 						</div><br>
+						<p class='hive-about-hint'>Press <b>V</b> to see the collective field. Read the world's own history in the <b>Chronicle</b> tab.</p>
 					</div>
 					<div class='right-half'>
-						<iframe id="video" src="https://www.youtube.com/embed/iSAKEnRfles"></iframe>
+						<h4>How a mind works here</h4>
+						<p class='about-detail'>Every sighted organism carries an N&times;N fully connected recurrent network. Its state vector is split: three quarters are private memory, one quarter is read from and written back to the shared field. Weights are private and inherited; only state is shared, so two creatures reading the same substrate interpret it through different minds.</p>
+						<p class='about-detail'>The state is renormalised every timestep, which is what keeps a recurrent loop under unbounded mutation from either saturating or fading to nothing.</p>
+						<p class='about-detail'>Sight is not free: a body with an eye produces food more slowly than a blind one. Intelligence has to pay for itself.</p>
 					</div>
 					<div class='icon-links'>
-						<a href=https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2 title='View the code'><i class="fa-brands fa-github"></i></a>
-						<a href="https://discord.gg/ZsrAAByEnr" title='Join the community'><i class="fa-brands fa-discord"></i></a>
-						<a href=" https://www.patreon.com/emergentgarden" title='Support the project'><i class="fa-brands fa-patreon"></i></a>
-
+						<a href=https://github.com/theomgdev/AlienLifeEngine title='View the code'><i class="fa-brands fa-github"></i></a>
+						<a href=https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2 title='Built on The Life Engine by Max Robinson (GPL-3.0)'><i class="fa fa-code-branch"></i></a>
 					</div>
 				</div>
 
