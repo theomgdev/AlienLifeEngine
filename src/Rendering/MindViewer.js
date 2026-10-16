@@ -24,6 +24,9 @@ class MindViewer {
         if (!host) return false;
         this.canvas = document.createElement('canvas');
         this.canvas.id = 'mind-canvas';
+        this.canvas.style.borderRadius = '6px';
+        this.canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+        this.canvas.style.marginTop = '6px';
         this.canvas.width = 240;
         this.canvas.height = 150;
         host.appendChild(this.canvas);
@@ -48,7 +51,8 @@ class MindViewer {
         const matrix_px = Math.min(96, N * CELL);
         this.canvas.width = Math.max(240, bar_w * N + 20);
         this.canvas.height = BAR_H + matrix_px + 34;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillStyle = '#18202c';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // ---- state bars: shared channels first, then private memory ----
         // Centre line at zero, bars grow up for positive and down for negative,
