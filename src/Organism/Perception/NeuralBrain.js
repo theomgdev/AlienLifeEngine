@@ -41,6 +41,8 @@ const INTENT_NONE    = 0;   // no strong opinion; carry on
 const INTENT_TURNED  = 1;   // picked a new heading
 const INTENT_HALT    = 2;   // stay put this tick
 const INTENT_REVERSE = 3;   // move against the current heading
+const INTENT_TURN_L  = 4;   // rotate the body one step left
+const INTENT_TURN_R  = 5;   // rotate the body one step right
 
 const RNG = require('../../Utils/RNG');
 const Directions = require('../Directions');
@@ -170,7 +172,7 @@ class NeuralBrain {
 
         // --- action readout: a = Wout h' --------------------------------------
         // The whole of h' feeds every action, so memory and perception both reach
-        // the decision. Channels: 0-3 headings, 4 hold, 5 halt, 6 reverse.
+        // the decision. Channels: 0-3 headings, 4 hold, 5 halt, 6 reverse, 7-8 body turns.
         let best = -Infinity, bestIdx = -1;
         for (let a = 0; a < action_n; a++) {
             let sum = 0;
@@ -189,6 +191,10 @@ class NeuralBrain {
                 return INTENT_HALT;
             case ACTIONS.REVERSE:
                 return INTENT_REVERSE;
+            case ACTIONS.TURN_L:
+                return INTENT_TURN_L;
+            case ACTIONS.TURN_R:
+                return INTENT_TURN_R;
             case ACTIONS.HOLD:
                 return INTENT_NONE;
             default:
@@ -288,3 +294,5 @@ module.exports.INTENT_NONE = INTENT_NONE;
 module.exports.INTENT_TURNED = INTENT_TURNED;
 module.exports.INTENT_HALT = INTENT_HALT;
 module.exports.INTENT_REVERSE = INTENT_REVERSE;
+module.exports.INTENT_TURN_L = INTENT_TURN_L;
+module.exports.INTENT_TURN_R = INTENT_TURN_R;

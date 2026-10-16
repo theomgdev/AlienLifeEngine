@@ -14,24 +14,34 @@
 
 const SensoryVector = require('./SensoryVector');
 
-// Action space: 4 absolute headings + hold course + halt + reverse.
+// Action space: 4 absolute headings + hold + halt + reverse + 2 body turns.
 //
-// The four headings and "hold" alone leave two gaps a real animal does not have.
-// A creature that wants to stay put has to spend every tick re-choosing a
-// heading it then walks along, and one that wants to back out of a dead end has
-// to turn around (two ticks facing the wrong way) because there is no way to
-// say "same facing, opposite travel". Both are cheap to express and expensive
-// to evolve around, so they get their own channels: HALT keeps the body still
-// while the brain keeps thinking, REVERSE moves against the current heading
-// without turning the body.
+// Headings alone leave gaps a real animal does not have. A creature that wants
+// to stay put has to spend every tick re-choosing a heading it then walks along,
+// and one that wants to back out of a dead end has to turn around (two ticks
+// facing the wrong way) because there is no way to say "same facing, opposite
+// travel". Both are cheap to express and expensive to evolve around, so they get
+// their own channels: HALT keeps the body still while the brain keeps thinking,
+// REVERSE moves against the current heading without turning the body.
+//
+// TURN_L / TURN_R rotate the body itself, which is the only way the brain can
+// aim its eyes. Eyes look along `org.rotation + eye.direction`, while movement
+// follows `org.direction` — two separate fields. Before these channels existed
+// only attemptRotate() ever wrote rotation, and it picked at RANDOM and only
+// when the organism was stuck, so a direction output made the body strafe
+// sideways with its eyes still pointing the old way, and eye orientation was
+// never under selection: there was no stable "forward" for a forward-facing eye
+// to evolve toward. Measured in Research/harness/ux_probe/eye_vs_heading.js
 const ACTIONS = {
     UP: 0, DOWN: 1, RIGHT: 2, LEFT: 3,
     HOLD: 4,      // keep the current heading and keep moving
     HALT: 5,      // stay in place this tick
     REVERSE: 6,   // travel opposite the current heading, body unturned
+    TURN_L: 7,    // rotate the body (and its eyes) one step left
+    TURN_R: 8,    // rotate the body (and its eyes) one step right
 };
-const ACTION_N = 7;
-const ACTION_NAMES = ['up', 'down', 'right', 'left', 'hold', 'halt', 'reverse'];
+const ACTION_N = 9;
+const ACTION_NAMES = ['up', 'down', 'right', 'left', 'hold', 'halt', 'reverse', 'turn-L', 'turn-R'];
 
 // Sense channel count is owned by SensoryVector; the brain just needs the width.
 const SENSE_N = SensoryVector.CHANNELS;

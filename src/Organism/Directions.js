@@ -29,6 +29,13 @@ const Directions = {
             dir = 0;
         }
         return dir;
+    },
+    rotateLeft: function(dir) {
+        dir--;
+        if (dir < 0){
+            dir = 3;
+        }
+        return dir;
     }
 }
 

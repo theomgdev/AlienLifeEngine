@@ -213,6 +213,32 @@ class Organism {
         return false;
     }
 
+    /**
+     * Rotate the body to a chosen orientation, taking its eyes with it.
+     *
+     * Separate from attemptRotate(), which exists as the stuck-detection
+     * fallback and deliberately randomises both rotation and heading. This one
+     * is a decision: it changes nothing but the orientation, so a brain can aim
+     * its eyes without also scrambling where it was going.
+     *
+     * Returns false when the rotated body would not fit — a long creature in a
+     * corridor genuinely cannot turn, which is a real cost of that body plan and
+     * exactly the kind of pressure that should shape geometry.
+     */
+    attemptRotateTo(new_rotation) {
+        if (!this.can_rotate) return false;
+        if (new_rotation === this.rotation) return true;
+        if (!this.isClear(this.c, this.r, new_rotation)) return false;
+        for (var cell of this.anatomy.cells) {
+            var real_c = this.c + cell.rotatedCol(this.rotation);
+            var real_r = this.r + cell.rotatedRow(this.rotation);
+            this.env.changeCell(real_c, real_r, CellStates.empty, null);
+        }
+        this.rotation = new_rotation;
+        this.updateGrid();
+        return true;
+    }
+
     changeDirection(dir) {
         this.direction = dir;
         this.move_count = 0;
@@ -329,6 +355,22 @@ class Organism {
             if (intent === NeuralBrain.INTENT_HALT) {
                 this.move_count = 0;
                 return this.living;
+            }
+
+            // A body turn is also a decision and costs the tick's movement: the
+            // creature spends the step aiming its eyes instead of travelling.
+            // That tradeoff is the point — it is what makes a good line of sight
+            // worth evolving a body geometry for.
+            if (intent === NeuralBrain.INTENT_TURN_L || intent === NeuralBrain.INTENT_TURN_R) {
+                const turned = intent === NeuralBrain.INTENT_TURN_L
+                    ? Directions.rotateLeft(this.rotation)
+                    : Directions.rotateRight(this.rotation);
+                if (this.attemptRotateTo(turned)) {
+                    this.move_count = 0;
+                    return this.living;
+                }
+                // Blocked: it wanted to turn and the geometry refused. Fall
+                // through so the stuck-detection below can still rescue it.
             }
 
             const moved = intent === NeuralBrain.INTENT_REVERSE
