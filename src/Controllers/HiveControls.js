@@ -125,13 +125,15 @@ class HiveControls {
         if (seen) return;
         // Let the world fill in first — a hint over an empty grid means nothing.
         this._hintTimer = setTimeout(() => {
-            if (!WorldConfig.show_collective_field) $('#hive-hint').addClass('visible');
+            if (!WorldConfig.show_collective_field) {
+                $('#hive-hint').addClass('visible').css('display', 'inline-flex');
+            }
         }, 4000);
     }
 
     dismissHint(permanent = false) {
         if (this._hintTimer) { clearTimeout(this._hintTimer); this._hintTimer = null; }
-        $('#hive-hint').removeClass('visible');
+        $('#hive-hint').removeClass('visible').css('display', 'none');
         if (permanent) {
             try { window.localStorage.setItem(HINT_KEY, '1'); } catch (e) { /* ignore */ }
         }

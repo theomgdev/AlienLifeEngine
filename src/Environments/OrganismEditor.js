@@ -20,9 +20,10 @@ class OrganismEditor extends Environment{
         // somewhere to hold its brain weights. 4 slots is plenty for one workbench.
         this.brain_arena = new BrainArena(4, Hyperparams.brainN,
             Math.max(1, Math.round(Hyperparams.brainN * Hyperparams.brainSharedFrac)));
-        this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
-        this.controller = new EditorController(this, this.renderer.canvas);
         this.grid_map = new GridMap(15, 15, cell_size);
+        this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
+        this.renderer.fillShape(195, 195);
+        this.controller = new EditorController(this, this.renderer.canvas);
         this.setDefaultOrg();
     }
 
@@ -39,6 +40,27 @@ class OrganismEditor extends Environment{
 
     renderFull() {
         this.renderer.renderFullGrid(this.grid_map.grid);
+        // Draw subtle grid lines on the editor workbench
+        const ctx = this.renderer.ctx;
+        if (ctx) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.lineWidth = 1;
+            const cs = this.grid_map.cell_size;
+            for (let x = 0; x <= this.grid_map.cols; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * cs + 0.5, 0);
+                ctx.lineTo(x * cs + 0.5, this.grid_map.rows * cs);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= this.grid_map.rows; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * cs + 0.5);
+                ctx.lineTo(this.grid_map.cols * cs, y * cs + 0.5);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
     }
 
     // absolute c r, not local
@@ -82,6 +104,7 @@ class OrganismEditor extends Environment{
         var center = this.grid_map.getCenter();
         this.organism = new Organism(center[0], center[1], this, orig_org);
         this.organism.updateGrid();
+        this.renderFull();
         this.controller.updateDetails();
     }
     
@@ -92,6 +115,7 @@ class OrganismEditor extends Environment{
 
     clear() {
         this.grid_map.fillGrid(CellStates.empty);
+        this.renderFull();
     }
 
     setDefaultOrg() {
@@ -104,6 +128,7 @@ class OrganismEditor extends Environment{
         this.organism.anatomy.addDefaultCell(CellStates.mouth, 0, 0);
         this.organism.updateGrid();
         this.organism.species = new Species(this.organism.anatomy, null, 0);
+        this.renderFull();
     }
 
     createRandom() {
@@ -112,6 +137,7 @@ class OrganismEditor extends Environment{
         this.organism = RandomOrganismGenerator.generate(this);
         this.organism.updateGrid();
         this.organism.species = new Species(this.organism.anatomy, null, 0);
+        this.renderFull();
     }
 
     resetWithRandomOrgs(env) {

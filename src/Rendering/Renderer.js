@@ -132,6 +132,8 @@ class Renderer {
         const cs = window.getComputedStyle(this.canvas);
         o.canvas.style.transform = cs.transform;
         o.canvas.style.transformOrigin = cs.transformOrigin;
+        o.canvas.style.top = cs.top;
+        o.canvas.style.left = cs.left;
         o.tf = cs.transform;
         o.org = cs.transformOrigin;
     }

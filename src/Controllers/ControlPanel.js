@@ -43,6 +43,10 @@ class ControlPanel {
             this.stats_panel.stopAutoRender();
         });
         $('#maximize').click ( () => {
+            if (this.control_panel_active) {
+                $('#minimize').click();
+                return;
+            }
             $('.control-panel').addClass('panel-open').css('display', 'flex');
             $('#maximize').addClass('active');
             $('#open-studio-btn').addClass('active');
@@ -55,6 +59,10 @@ class ControlPanel {
             if (curTab === 'stats') {
                 this.stats_panel.startAutoRender();
             } else if (curTab === 'editor') {
+                if (this.engine.organism_editor) {
+                    this.engine.organism_editor.renderer.fillShape(195, 195);
+                    this.engine.organism_editor.renderFull();
+                }
                 this.editor_controller.refreshDetailsPanel();
             }
         });
@@ -187,6 +195,10 @@ class ControlPanel {
                 self.stats_panel.startAutoRender();
             }
             else if (this.id === 'editor') {
+                if (self.engine.organism_editor) {
+                    self.engine.organism_editor.renderer.fillShape(195, 195);
+                    self.engine.organism_editor.renderFull();
+                }
                 self.editor_controller.refreshDetailsPanel();
             }
             self.tab_id = this.id;

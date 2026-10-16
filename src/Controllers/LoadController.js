@@ -71,7 +71,7 @@ const LoadController = {
     },
 
     async open() {
-        $('.load-panel').css('display','block');
+        $('.load-panel').addClass('open').css('display','flex');
     },
 
     loadJson(callback) {
@@ -96,7 +96,7 @@ const LoadController = {
     },
 
     close() {
-        $('.load-panel').css('display','none');
+        $('.load-panel').removeClass('open').css('display','none');
         $('#load-selected-btn').off('click');
         $('#upload-json').off('change');
     }

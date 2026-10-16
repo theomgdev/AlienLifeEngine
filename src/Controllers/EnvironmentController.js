@@ -165,12 +165,16 @@ class EnvironmentController extends CanvasController{
     }
 
     dragScreen() {
-        var cur_top = parseInt($('#env-canvas').css('top'));
-        var cur_left = parseInt($('#env-canvas').css('left'));
-        var new_top = cur_top + ((this.mouse_y - this.start_y)*this.scale);
-        var new_left = cur_left + ((this.mouse_x - this.start_x)*this.scale);
-        $('#env-canvas').css('top', new_top+'px');
-        $('#env-canvas').css('left', new_left+'px');
+        var cur_top = parseFloat($('#env-canvas').css('top')) || 0;
+        var cur_left = parseFloat($('#env-canvas').css('left')) || 0;
+        var dx = (this.mouse_x - this.start_x) * this.scale;
+        var dy = (this.mouse_y - this.start_y) * this.scale;
+        $('#env-canvas').css('top', (cur_top + dy) + 'px');
+        $('#env-canvas').css('left', (cur_left + dx) + 'px');
+        this.start_x = this.mouse_x;
+        this.start_y = this.mouse_y;
+        if (this.env.renderer && this.env.renderer.syncOverlayTransform)
+            this.env.renderer.syncOverlayTransform();
     }
 
     dropOrganism(organism, col, row) {
