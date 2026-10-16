@@ -9,6 +9,7 @@ const RNG = require("../Utils/RNG");
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator')
 
 const BrainArena = require('../Organism/Perception/BrainArena');
+const Hyperparams = require('../Hyperparameters');
 
 class OrganismEditor extends Environment{
     constructor() {
