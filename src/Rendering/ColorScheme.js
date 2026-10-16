@@ -6,7 +6,6 @@ var color_scheme = {
     "wall":"gray",
     "mouth":"#DEB14D",
     "producer":"#15DE59",
-    "mover":"#60D4FF",
     "killer":"#F82380",
     "armor":"#7230DB",
     "eye":"#B6C1EA",

@@ -1,5 +1,6 @@
 const CellStates = require("../Organism/Cell/CellStates");
 const RNG = require("../Utils/RNG");
+const SpeciesNamer = require("./SpeciesNamer");
 let FossilRecord = undefined; // workaround to a circular dependency problem
 const getFossilRecord = () => {
     if (!FossilRecord)
@@ -7,15 +8,26 @@ const getFossilRecord = () => {
     return FossilRecord;
 }
 
+let next_species_id = 1;
+
 class Species {
     constructor(anatomy, ancestor, start_tick) {
         this.anatomy = anatomy;
-        this.ancestor = ancestor; // eventually need to garbage collect ancestors to avoid memory problems
+        // Phylogeny is kept as an ID, not an object reference. The upstream engine
+        // held the ancestor Species itself and then had to null it out on extinction
+        // ("garbage collect ancestors"), which severed the tree after 2-3 generations
+        // and made the whole 400k-tick history unreadable. An id is 4 bytes and
+        // survives the ancestor's death, so the full tree is now recoverable.
+        this.id = next_species_id++;
+        this.ancestor_id = ancestor ? ancestor.id : null;
+        this.generation = ancestor ? (ancestor.generation || 0) + 1 : 0;
+        this.ancestor = ancestor;   // kept only while the ancestor is extant
         this.population = 1;
         this.cumulative_pop = 1;
+        this.peak_pop = 1;
         this.start_tick = start_tick;
         this.end_tick = -1;
-        this.name = RNG.random().toString(36).substr(2, 10);
+        this.name = SpeciesNamer.name(anatomy);
         this.extinct = false;
         this.calcAnatomyDetails();
     }
@@ -30,11 +42,13 @@ class Species {
             cell_counts[cell.state.name]+=1;
         }
         this.cell_counts=cell_counts;
+        this.cell_total = this.anatomy.cells.length;
     }
 
     addPop() {
         this.population++;
         this.cumulative_pop++;
+        if (this.population > this.peak_pop) this.peak_pop = this.population;
     }
 
     decreasePop() {

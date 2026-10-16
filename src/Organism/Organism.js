@@ -3,7 +3,6 @@ const Neighbors = require("../Grid/Neighbors");
 const Hyperparams = require("../Hyperparameters");
 const Directions = require("./Directions");
 const Anatomy = require("./Anatomy");
-const Brain = require("./Perception/Brain");
 const NeuralBrain = require("./Perception/NeuralBrain");
 const SensoryVector = require("./Perception/SensoryVector");
 const FossilRecord = require("../Stats/FossilRecord");
@@ -24,18 +23,15 @@ class Organism {
         this.can_rotate = Hyperparams.rotationEnabled;
         this.move_count = 0;
         this.move_range = 4;
-        this.ignore_brain_for = 0;
         this.mutability = 5;
         this.damage = 0;
-        // Neural hive-mind brain when enabled, legacy lookup table otherwise.
+        // Every organism carries a brain. It only gets used once the body has an
+        // eye, but it is inherited unconditionally so a lineage that loses its
+        // eyes and regains them later keeps the mind it evolved.
         this.observations = [];
-        if (Hyperparams.useNeuralBrain) {
-            this.brain = new NeuralBrain(this);
-            if (env && env.brain_arena) {
-                this.brain.attach(env.brain_arena, env.collective_field);
-            }
-        } else {
-            this.brain = new Brain(this);
+        this.brain = new NeuralBrain(this);
+        if (env && env.brain_arena) {
+            this.brain.attach(env.brain_arena, env.collective_field);
         }
         if (parent != null) {
             this.inherit(parent);
@@ -50,19 +46,12 @@ class Organism {
             //deep copy parent cells
             this.anatomy.addInheritCell(c);
         }
-        if (Hyperparams.useNeuralBrain) {
-            // The brain is inherited unconditionally: a lineage can lose its eyes
-            // and regain them later, and its evolved mind should survive the gap.
-            this.brain.copy(parent.brain);
-        }
-        else if(parent.anatomy.is_mover && parent.anatomy.has_eyes) {
-            this.brain.copy(parent.brain);
-        }
+        this.brain.copy(parent.brain);
     }
 
     // amount of food required before it can reproduce
     foodNeeded() {
-        return this.anatomy.is_mover ? this.anatomy.cells.length + Hyperparams.extraMoverFoodCost : this.anatomy.cells.length;
+        return this.anatomy.cells.length + (this.anatomy.has_eyes ? Hyperparams.sightedFoodCost : 0);
     }
 
     lifespan() {
@@ -96,27 +85,14 @@ class Organism {
         } 
         var mutated = false;
         if (RNG.random() * 100 <= prob) {
-            if (Hyperparams.useNeuralBrain) {
-                // Brain and body mutate independently: the mind is always under
-                // selection, not just on a 10% side-branch as in the old engine.
-                org.brain.mutate();
-                if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
-                    org.move_range += Math.floor(RNG.random() * 4) - 2;
-                    if (org.move_range <= 0) org.move_range = 1;
-                }
-                mutated = org.mutate();
-            }
-            else if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
-                if (org.anatomy.has_eyes) {
-                    org.brain.mutate();
-                }
+            // Brain and body mutate together on every mutation event: the mind is
+            // always under selection, not on a 10% side-branch as it was upstream.
+            org.brain.mutate();
+            if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
                 org.move_range += Math.floor(RNG.random() * 4) - 2;
-                if (org.move_range <= 0){
-                    org.move_range = 1;
-                };
-                
+                if (org.move_range <= 0) org.move_range = 1;
             }
-            else {
+            {
                 mutated = org.mutate();
             }
         }
@@ -331,42 +307,20 @@ class Organism {
                 return this.living
         }
         
+        // Movement is sight's doing: is_mover is true exactly when the body has an
+        // eye, so everything that moves also thinks, and the payoff of mobility is
+        // the payoff of the brain.
         if (this.anatomy.is_mover) {
             this.move_count++;
-            var changed_dir = false;
-            if (Hyperparams.useNeuralBrain) {
-                // Only organisms that can see get to think: eyes are the sensory
-                // organ, and a brain with no input would just emit noise.
-                if (this.anatomy.has_eyes) {
-                    const senses = SensoryVector.build(this, this.observations);
-                    changed_dir = this.brain.think(senses);
-                }
-                var moved = this.attemptMove();
-                // No ignore_brain_for here. That patch existed to stop the stateless
-                // table brain from locking onto an unreachable target and grinding
-                // against a wall; a recurrent net learns to route around obstacles
-                // on its own, and blinding it would destroy that.
-                if ((this.move_count > this.move_range && !changed_dir) || !moved) {
-                    if (!this.attemptRotate()) {
-                        this.changeDirection(Directions.getRandomDirection());
-                    }
-                }
-            }
-            else {
-                if (this.ignore_brain_for == 0){
-                    changed_dir = this.brain.decide();
-                }
-                else{
-                    this.ignore_brain_for --;
-                }
-                var moved = this.attemptMove();
-                if ((this.move_count > this.move_range && !changed_dir) || !moved){
-                    var rotated = this.attemptRotate();
-                    if (!rotated) {
-                        this.changeDirection(Directions.getRandomDirection());
-                        if (changed_dir)
-                            this.ignore_brain_for = this.move_range + 1;
-                    }
+            const senses = SensoryVector.build(this, this.observations);
+            const changed_dir = this.brain.think(senses);
+            const moved = this.attemptMove();
+            // No ignore_brain_for here. That existed to stop the stateless table
+            // brain grinding against a wall it had locked onto; a recurrent net
+            // routes around obstacles itself, and blinding it would destroy that.
+            if ((this.move_count > this.move_range && !changed_dir) || !moved) {
+                if (!this.attemptRotate()) {
+                    this.changeDirection(Directions.getRandomDirection());
                 }
             }
         }
@@ -403,12 +357,8 @@ class Organism {
         let org = SerializeHelper.copyNonObjects(this);
         delete org.observations;
         org.anatomy = this.anatomy.serialize();
-        if (Hyperparams.useNeuralBrain) {
-            let b = this.brain.serialize();
-            if (b) org.brain = b;
-        }
-        else if (this.anatomy.is_mover && this.anatomy.has_eyes)
-            org.brain = this.brain.serialize();
+        let b = this.brain.serialize();
+        if (b) org.brain = b;
         org.species_name = this.species ? this.species.name : undefined;
         return org;
     }
@@ -417,12 +367,7 @@ class Organism {
         SerializeHelper.overwriteNonObjects(org, this);
         this.observations = [];
         this.anatomy.loadRaw(org.anatomy)
-        if (org.brain) {
-            if (Hyperparams.useNeuralBrain && this.brain.loadRaw)
-                this.brain.loadRaw(org.brain);
-            else if (!Hyperparams.useNeuralBrain)
-                this.brain.copy(org.brain);
-        }
+        if (org.brain) this.brain.loadRaw(org.brain);
     }
 
 }

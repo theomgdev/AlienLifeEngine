@@ -1,7 +1,6 @@
 const CellStates = require("./Cell/CellStates");
 const Organism = require("./Organism");
 const RNG = require("../Utils/RNG");
-const Brain = require("./Perception/Brain")
 
 class RandomOrganismGenerator {
 
@@ -45,12 +44,7 @@ class RandomOrganismGenerator {
                 break;
         }
 
-        // randomize the organism's brain
-        // The neural brain's weights are already randomised when its arena slot is
-        // allocated, and it has no decision table to seed.
-        if (organism.brain.randomizeDecisions)
-            organism.brain.randomizeDecisions(true);
-
+        // The brain's weights are randomised when its arena slot is allocated.
         return organism;
     }
 

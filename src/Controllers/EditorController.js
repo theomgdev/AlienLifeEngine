@@ -74,9 +74,6 @@ class EditorController extends CanvasController{
                 case "producer":
                     self.edit_cell_type = CellStates.producer;
                     break;
-                case "mover":
-                    self.edit_cell_type = CellStates.mover;
-                    break;
                 case "killer":
                     self.edit_cell_type = CellStates.killer;
                     break;
@@ -242,7 +239,7 @@ class EditorController extends CanvasController{
                     " (" + info.shared_n + " shared / " + info.private_n + " private)");
                 $('.retreat-types').text("RMSNorm gain: " + info.gain.toFixed(3));
             } else {
-                $('.chase-types').text("Neural brain (inactive — needs mover + eye)");
+                $('.chase-types').text("Neural brain (inactive — needs an eye)");
                 $('.retreat-types').text("");
             }
             return;

@@ -37,11 +37,6 @@ class Producer extends CellState {
         super('producer');
     }
 }
-class Mover extends CellState {
-    constructor() {
-        super('mover');
-    }
-}
 class Killer extends CellState {
     constructor() {
         super('killer');
@@ -81,13 +76,14 @@ const CellStates = {
     wall: new Wall(),
     mouth: new Mouth(),
     producer: new Producer(),
-    mover: new Mover(),
     killer: new Killer(),
     armor: new Armor(),
     eye: new Eye(),
     defineLists() {
-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye]
-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye];
+        // There is no mover cell: mobility comes from the eye (see
+        // Anatomy.checkTypeChange), so everything that moves also sees and thinks.
+        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.killer, this.armor, this.eye]
+        this.living = [this.mouth, this.producer, this.killer, this.armor, this.eye];
     },
     getRandomName: function() {
         return this.all[Math.floor(RNG.random() * this.all.length)].name;

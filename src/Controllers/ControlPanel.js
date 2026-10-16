@@ -4,6 +4,7 @@ const StatsPanel = require("../Stats/StatsPanel");
 const WorldConfig = require("../WorldConfig");
 const LoadController = require("./LoadController");
 const HiveControls = require("./HiveControls");
+const ChroniclePanel = require("./ChroniclePanel");
 
 class ControlPanel {
     constructor(engine) {
@@ -27,6 +28,7 @@ class ControlPanel {
         this.paused=false;
         this.setHyperparamDefaults();
         this.hive_controls = new HiveControls(engine);
+        this.chronicle_panel = new ChroniclePanel(engine);
         LoadController.control_panel = this;
     }
 
@@ -290,8 +292,8 @@ class ControlPanel {
         $('#food-drop-rate').change(function() {
             Hyperparams.foodDropProb = $('#food-drop-rate').val();
         });
-        $('#extra-mover-cost').change(function() {
-            Hyperparams.extraMoverFoodCost = parseInt($('#extra-mover-cost').val());
+        $('#sighted-food-cost').change(function() {
+            Hyperparams.sightedFoodCost = parseInt($('#sighted-food-cost').val());
         });
         $('#org-limit').change(function() {
             Hyperparams.maxOrganisms = parseInt($('#org-limit').val());
@@ -327,8 +329,8 @@ class ControlPanel {
             $('#change-prob').val(Math.floor(Hyperparams.changeProb));
             $('#remove-prob').val(Math.floor(Hyperparams.removeProb));
         });
-        $('#movers-produce').change( function() {
-            Hyperparams.moversCanProduce = this.checked;
+        $('#sighted-producer-rate').change( function() {
+            Hyperparams.sightedProducerRate = parseFloat($('#sighted-producer-rate').val());
         });
         $('#food-blocks').change( function() {
             Hyperparams.foodBlocksReproduction = this.checked;        
@@ -375,10 +377,10 @@ class ControlPanel {
         $('#add-prob').val(Hyperparams.addProb);
         $('#change-prob').val(Hyperparams.changeProb);
         $('#remove-prob').val(Hyperparams.removeProb);
-        $('#movers-produce').prop('checked', Hyperparams.moversCanProduce);
+        $('#sighted-producer-rate').val(Hyperparams.sightedProducerRate);
         $('#food-blocks').prop('checked', Hyperparams.foodBlocksReproduction);
         $('#food-drop-rate').val(Hyperparams.foodDropProb);
-        $('#extra-mover-cost').val(Hyperparams.extraMoverFoodCost);
+        $('#sighted-food-cost').val(Hyperparams.sightedFoodCost);
         $('#org-limit').val(Hyperparams.maxOrganisms);
         $('#look-range').val(Hyperparams.lookRange);
         $('#see-through-self').prop('checked', Hyperparams.seeThroughSelf);

@@ -17,25 +17,33 @@ const Hyperparams = {
         this.rotationEnabled = true;
 
         this.foodBlocksReproduction = true;
-        this.moversCanProduce = false;
+        // Sight is not free: a sighted body produces food at this fraction of a
+        // blind producer's rate. At 0 an eye switches food production off entirely,
+        // which measurably starves thinking lineages out of existence.
+        // Swept over 6 worlds x 25k ticks: 0.75 gives 6/6 survival with 94% of
+        // organisms sighted; 0.5 drops to 3/6 survival, 0.25 to 1/6.
+        this.sightedProducerRate = 0.75;
 
         this.instaKill = false;
 
         this.lookRange = 20;
         this.seeThroughSelf = false;
 
-        this.foodDropProb = 0;
+        // A trickle of free food. Without it worlds are brittle: a single
+        // collapse of the producers ends everything. Measured 1/6 -> 6/6 survival.
+        this.foodDropProb = 5;
 
-        this.extraMoverFoodCost = 0;
+        // Extra food a sighted (and therefore mobile, thinking) organism must
+        // collect before it can reproduce. The price of a mind.
+        this.sightedFoodCost = 0;
 
         this.maxOrganisms = -1;
 
         // --- AlienLifeEngine: hive-mind brain ---
-        // Every mover+eye organism carries an NxN fully connected recurrent brain.
+        // Every sighted organism carries an NxN fully connected recurrent brain.
         // brainSharedFrac of its state vector is shared through the CollectiveField
         // with every other thinking organism in the same region; the rest is private.
         // All of it evolves by mutation alone.
-        this.useNeuralBrain = true;
         this.brainN = 16;              // 272 params/organism; 5.8% of a 60fps frame at 2000 organisms
         this.brainSharedFrac = 0.25;   // the 25% collective slice
         this.brainInitScale = 0.6;     // initial weight spread

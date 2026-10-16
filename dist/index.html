@@ -47,6 +47,7 @@
 					<p class='tabnav-item' id='world-controls'>World Controls</p>
 					<p class='tabnav-item' id='hyperparameters'>Evolution Controls</p>
 					<p class='tabnav-item' id='stats'>Statistics</p>
+					<p class='tabnav-item' id='chronicle'>Chronicle</p>
 					<button id="minimize" title="Minimze Control Panel."><i class="fa fa-minus-square"></i></button>
 				</div>
 
@@ -58,7 +59,6 @@
 						<div id='cell-legend'>
 							<div class='cell-legend-type' id='mouth' title="Mouth: Eats adjacent food."></div>
 							<div class='cell-legend-type' id='producer' title="Producer: Produces adjacent food."></div>
-							<div class='cell-legend-type' id='mover' title="Mover: Allows for movement and rotation."></div>
 							<div class='cell-legend-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
 							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
 							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
@@ -95,7 +95,6 @@
 							<div style='grid-column: 1;'>
 								<div class='cell-type' id='mouth' title="Mouth: Eats adjacent food."></div>
 								<div class='cell-type' id='producer' title="Producer: Produces adjacent food."></div>
-								<div class='cell-type' id='mover' title="Mover: Allows for movement and rotation."></div>
 							</div>
 							<div style='grid-column: 2;'>
 								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
@@ -148,7 +147,6 @@
 									<option value="food">food</option>
 									<option value="mouth">mouth</option>
 									<option value="producer">producer</option>
-									<option value="mover">mover</option>
 									<option value="killer">killer</option>
 									<option value="armor">armor</option>
 									<option value="eye">eye</option>
@@ -231,10 +229,10 @@
 						<input type="checkbox" id="see-through-self">
 						<br>
 						<label for="food-drop-rate" title='Rate at which food is automatically generated and dropped in the world'>Auto food drop rate:</label>
-						<input type="number" id="food-drop-rate" value=0 max="1000">
+						<input type="number" id="food-drop-rate" value=5 max="1000">
 						<br>
-						<label for="extra-mover-cost" title='Additional food cost for movers to reproduce'>Extra mover reproduction cost:</label>
-						<input type="number" id="extra-mover-cost" value=0 max="1000" step="1">
+						<label for="sighted-food-cost" title='Additional food a sighted (and therefore thinking) organism must collect before it can reproduce. The price of a mind.'>Cost of sight:</label>
+						<input type="number" id="sighted-food-cost" value=0 max="1000" step="1">
 
 						
 					</div>
@@ -256,17 +254,14 @@
 						<label for="remove-prob" title='An existing cell will be removed.'>Remove Cell:</label>
 						<input class="mut-prob" type="number" id="remove-prob" min="0" max="100" value=33>
 						<br/>
-						<label for="movers-produce" title='When on, movers can produce food from producer cells. When off, producer cells are disabled on mover organisms.'>Movers can produce food</label>
-						<input type="checkbox" id="movers-produce">
+						<label for="sighted-producer-rate" title='Food production rate of a sighted body, as a fraction of a blind one. At 0 an eye switches food production off entirely and thinking lineages starve out.'>Sighted production rate:</label>
+						<input type="number" id="sighted-producer-rate" value=0.75 min="0" max="1" step="0.05">
 						<br/>
 						<label for="food-blocks" title='When on, reproduction will fail if offspring intersect with food. When off, offspring will remove blocking food.'>Food blocks reproduction</label>
 						<input type="checkbox" id="food-blocks" checked>
 						<br>
 
-						<h4 title='Every organism with a mover and an eye carries an NxN recurrent neural brain. A quarter of its state vector is not private: it is read from and written back into a shared field around it, so part of every mind lives in a substrate its neighbours also think with. All of it evolves by mutation alone.'>Hive Mind</h4>
-						<label for="hive-enabled" title='When off, organisms fall back to the simple lookup-table brain of the original engine.'>Neural brains</label>
-						<input type="checkbox" id="hive-enabled" checked>
-						<br>
+						<h4 title='Every organism with an eye carries an NxN recurrent neural brain, and sight is what makes it mobile. A quarter of its state vector is not private: it is read from and written back into a shared field around it, so part of every mind lives in a substrate its neighbours also think with. All of it evolves by mutation alone.'>Hive Mind</h4>
 						<label for="hive-overlay" title='Draw the collective field over the world as culture patches. Hotkey: V'>Show collective field</label>
 						<input type="checkbox" id="hive-overlay">
 						<br>
@@ -315,6 +310,21 @@
 						<div id="chartContainer"></div>
 					</div>
 				</div>
+
+				<div id='chronicle' class='tab'>
+					<div class='left-half'>
+						<h2>Chronicle</h2>
+						<p class='chronicle-sub'>What this world has lived through.</p>
+						<div id='chronicle-log'></div>
+					</div>
+					<div class='right-half'>
+						<h3>Deepest lineage</h3>
+						<p class='chronicle-sub' id='lineage-sub'></p>
+						<div id='lineage-tree'></div>
+						<h3>Dynasties remembered</h3>
+						<div id='dynasty-list'></div>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class='load-panel'>
@@ -361,7 +371,7 @@
 		</div>
 		<div id="hive-hint">
 			<span class="hive-hint-dot"></span>
-			<span class="hive-hint-text">Every organism with an eye and a mover thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
+			<span class="hive-hint-text">Every organism with an eye thinks with a brain it shares a quarter of. Press <b>V</b> to see the Hive Mind.</span>
 			<button id="hive-hint-close" title="Dismiss">&times;</button>
 		</div>
 		<div id='maximize-hot-control' class='hot-controls'>

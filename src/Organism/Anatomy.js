@@ -86,16 +86,25 @@ class Anatomy {
 
     checkTypeChange() {
         this.is_producer = false;
-        this.is_mover = false;
         this.has_eyes = false;
         for (var cell of this.cells) {
             if (cell.state == CellStates.producer)
                 this.is_producer = true;
-            if (cell.state == CellStates.mover)
-                this.is_mover = true;
             if (cell.state == CellStates.eye)
                 this.has_eyes = true;
         }
+        // Mobility is a consequence of sight, not a separate organ.
+        //
+        // With a dedicated mover cell, blind organisms could move on random
+        // directions and competed against sighted ones on equal footing — so the
+        // eye's cost was paid up front while its benefit (a brain worth consulting)
+        // only arrived later, and thinking lineages measurably never got off the
+        // ground: peaks of ~50 thinkers decaying to 1-3 individuals within 40k ticks.
+        //
+        // Deriving movement from the eye fuses the two: everything that moves sees,
+        // everything that sees thinks, and the evolutionary payoff of mobility IS
+        // the payoff of the brain. There is no blind random-walker to compete with.
+        this.is_mover = this.has_eyes;
     }
 
     getRandomCell() {

@@ -32,7 +32,6 @@ const VALENCE = {
     wall: -0.3,
     mouth: -0.2,
     producer: 0.4,
-    mover: -0.1,
     killer: -1.0,
     armor: -0.15,
     eye: -0.1,

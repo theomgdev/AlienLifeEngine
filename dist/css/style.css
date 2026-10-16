@@ -451,3 +451,92 @@ input:hover,input:active {
     background-color: #2c7a68;
     color: #c9fff2;
 }
+
+/* ---- Chronicle --------------------------------------------------------- */
+/* The world keeps a history now; this is where you read it. */
+
+.chronicle-sub {
+    color: #8b97a6;
+    font-size: 13px;
+    margin: 2px 0 8px 0;
+}
+
+.chronicle-empty {
+    color: #6b7684;
+    font-style: italic;
+    font-size: 13px;
+}
+
+#chronicle-log {
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.chron-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 5px 8px;
+    margin-bottom: 3px;
+    border-left: 3px solid #3a4452;
+    border-radius: 0 4px 4px 0;
+    background: rgba(255, 255, 255, 0.025);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.chron-icon    { flex: 0 0 14px; color: #7f8b9a; font-size: 12px; }
+.chron-tick    { flex: 0 0 auto; color: #68727f; font-size: 11px; font-variant-numeric: tabular-nums; }
+.chron-text    { color: #d4dce6; }
+
+/* each kind of event gets its own colour, so the log is skimmable */
+.chron-genesis    { border-left-color: #4caf7d; }
+.chron-genesis    .chron-icon { color: #4caf7d; }
+.chron-first      { border-left-color: #d9b64e; }
+.chron-first      .chron-icon { color: #d9b64e; }
+.chron-mind       { border-left-color: #6fa8ff; }
+.chron-mind       .chron-icon { color: #6fa8ff; }
+.chron-culture    { border-left-color: #b57cff; }
+.chron-culture    .chron-icon { color: #b57cff; }
+.chron-boom       { border-left-color: #5fd3a6; }
+.chron-boom       .chron-icon { color: #5fd3a6; }
+.chron-famine     { border-left-color: #e08a4a; }
+.chron-famine     .chron-icon { color: #e08a4a; }
+.chron-bottleneck { border-left-color: #e0c04a; }
+.chron-bottleneck .chron-icon { color: #e0c04a; }
+.chron-dynasty    { border-left-color: #9aa7b8; }
+.chron-dynasty    .chron-icon { color: #9aa7b8; }
+.chron-record     { border-left-color: #7fd8e8; }
+.chron-record     .chron-icon { color: #7fd8e8; }
+.chron-apocalypse { border-left-color: #e05a5a; background: rgba(224, 90, 90, 0.07); }
+.chron-apocalypse .chron-icon { color: #e05a5a; }
+
+#lineage-tree, #dynasty-list {
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.lin-row {
+    padding: 2px 0;
+    color: #9aa7b8;
+    white-space: nowrap;
+}
+
+.lin-alive .lin-name { color: #6fe3c4; font-weight: 600; }
+.lin-branch { color: #4a5563; }
+.lin-name   { color: #c6cfdb; }
+.lin-gen    { color: #68727f; font-size: 11px; margin-left: 6px; }
+
+.dyn-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dyn-name { color: #c6cfdb; }
+.dyn-stat { color: #68727f; font-size: 11px; font-variant-numeric: tabular-nums; }

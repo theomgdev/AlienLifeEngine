@@ -10,10 +10,14 @@ class ProducerCell extends BodyCell{
     }
 
     performFunction() {
-        if (this.org.anatomy.is_mover && !Hyperparams.moversCanProduce)
-            return;
+        // A sighted body still produces food, just more slowly. Switching
+        // production off entirely for anything with an eye (as the original engine
+        // did for movers) makes sight disqualifying and starves out every thinking
+        // lineage — measured: thinkers collapsed to 1-3 individuals within 40k ticks.
         var env = this.org.env;
         var prob = Hyperparams.foodProdProb;
+        if (this.org.anatomy.has_eyes)
+            prob *= Hyperparams.sightedProducerRate;
         var real_c = this.getRealCol();
         var real_r = this.getRealRow();
         if (RNG.random() * 100 <= prob) {

@@ -13,6 +13,7 @@ const BrainArena = require('../Organism/Perception/BrainArena');
 const CollectiveField = require('../Collective/CollectiveField');
 const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator');
 const RNG = require("../Utils/RNG");
+const Chronicle = require("../Narrative/Chronicle");
 
 class WorldEnvironment extends Environment{
     constructor(cell_size) {
@@ -34,6 +35,7 @@ class WorldEnvironment extends Environment{
         // One flat weight pool for every brain, and one coarse collective field
         // laid over the grid holding the shared 25% of every thinking organism.
         this.initHiveMind();
+        this.chronicle = new Chronicle(this);
 
         FossilRecord.setEnv(this);
     }
@@ -70,6 +72,12 @@ class WorldEnvironment extends Environment{
         this.total_ticks ++;
         if (this.total_ticks % this.data_update_rate == 0) {
             FossilRecord.updateData();
+        }
+        // The chronicle reads the stats layer, so it runs after updateData. It
+        // throttles itself internally; calling it every tick is intentional so
+        // nothing short-lived is missed between sweeps.
+        if (this.chronicle) {
+            this.chronicle.observe(FossilRecord);
         }
     }
 
@@ -129,6 +137,7 @@ class WorldEnvironment extends Environment{
     OriginOfLife() {
         if (Hyperparams.randomStart) {
             this.seedRandomOrganisms(this.defaultStartPopulation());
+            if (this.chronicle) this.chronicle.genesis(this.organisms.length);
             // A crowd can fail to place every founder; fall back to the classic
             // single ancestor rather than leaving a dead world.
             if (this.organisms.length > 0) return;
@@ -140,6 +149,7 @@ class WorldEnvironment extends Environment{
         org.anatomy.addDefaultCell(CellStates.producer, -1, -1);
         this.addOrganism(org);
         FossilRecord.addSpecies(org, null);
+        if (this.chronicle) this.chronicle.genesis(1);
     }
 
     /**

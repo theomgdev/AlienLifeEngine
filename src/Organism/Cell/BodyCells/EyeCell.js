@@ -8,6 +8,12 @@ class EyeCell extends BodyCell{
     constructor(org, loc_col, loc_row){
         super(CellStates.eye, org, loc_col, loc_row);
         this.org.anatomy.has_eyes = true;
+        // Mobility is derived from sight (see Anatomy.checkTypeChange), and the
+        // flags are also set here at construction because addRandomizedCell and
+        // addDefaultCell build a body without running checkTypeChange. The old
+        // MoverCell set is_mover the same way; dropping it from the evolvable pool
+        // left every sighted random organism immobile, which starved whole worlds.
+        this.org.anatomy.is_mover = true;
     }
 
     initInherit(parent) {
@@ -34,14 +40,9 @@ class EyeCell extends BodyCell{
     }
 
     performFunction() {
-        var obs = this.look();
-        // The neural brain consumes all eyes together via SensoryVector, so every
-        // eye's report is kept. The legacy brain only ever used the nearest one.
-        if (Hyperparams.useNeuralBrain) {
-            this.org.observations.push(obs);
-        } else {
-            this.org.brain.observe(obs);
-        }
+        // Every eye's report is kept: SensoryVector feeds all of them to the brain
+        // together, so a body with more eyes genuinely perceives more.
+        this.org.observations.push(this.look());
     }
 
     look() {

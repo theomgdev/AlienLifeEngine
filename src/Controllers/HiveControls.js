@@ -70,10 +70,6 @@ class HiveControls {
             Hyperparams.brainSharedFrac = f;
             this.rebuildHive();
         });
-        $('#hive-enabled').change(() => {
-            Hyperparams.useNeuralBrain = $('#hive-enabled').is(':checked');
-            this.rebuildHive();
-        });
 
         // These are live: the field can be reshaped without touching brains.
         $('#collective-radius').change(() => {
@@ -116,7 +112,6 @@ class HiveControls {
         $('#collective-radius').val(Hyperparams.collectiveRadius);
         $('#collective-leak').val(Hyperparams.collectiveLeak);
         $('#brain-mutation').val(Hyperparams.brainMutationSigma);
-        $('#hive-enabled').prop('checked', Hyperparams.useNeuralBrain);
         $('#random-start').prop('checked', Hyperparams.randomStart);
         this.syncUI();
     }
