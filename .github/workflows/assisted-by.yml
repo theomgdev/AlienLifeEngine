@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check for disclosure, and say how to add it
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         with:
