@@ -1,0 +1,66 @@
+name: Discussion welcome
+
+on:
+  discussion:
+    types: [created]
+
+permissions:
+  discussions: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Greet a first-time participant
+        uses: actions/github-script@v7
+        env:
+          # Never interpolate user-controlled text into a shell command. It is
+          # passed as an environment variable and read by the script instead.
+          DISCUSSION_ID: ${{ github.event.discussion.node_id }}
+          AUTHOR: ${{ github.event.discussion.user.login }}
+          CATEGORY: ${{ github.event.discussion.category.name }}
+        with:
+          script: |
+            const { DISCUSSION_ID, AUTHOR, CATEGORY } = process.env;
+
+            // AUTHOR reaches a GraphQL variable, never a shell, and GitHub
+            // logins are [A-Za-z0-9-] so the @mention cannot carry markup.
+            // Belt and braces anyway, since this is the one untrusted string.
+            if (!/^[A-Za-z0-9-]+$/.test(AUTHOR || '')) {
+              core.info('Unexpected author login shape; skipping greeting.');
+              return;
+            }
+            // Only greet someone who has not posted here before, so the thread
+            // of a regular does not collect a bot comment every time.
+            const prior = await github.graphql(`
+              query($owner:String!, $name:String!) {
+                repository(owner:$owner, name:$name) {
+                  discussions(first: 100, orderBy: {field: CREATED_AT, direction: DESC}) {
+                    nodes { author { login } }
+                  }
+                }
+              }`, { owner: context.repo.owner, name: context.repo.repo });
+
+            const posts = prior.repository.discussions.nodes
+              .filter(d => d.author && d.author.login === AUTHOR).length;
+            if (posts > 1) {
+              core.info(`${AUTHOR} has posted before; no greeting.`);
+              return;
+            }
+
+            const showcase = /showcase|creature|world/i.test(CATEGORY);
+            const body = showcase
+              ? `Welcome, @${AUTHOR} — first post here.\n\n` +
+                `If you are showing off a world or a lineage, the two things people will ask for are the **seed or exported JSON** and the **hyperparameters you changed**, so the run can be reproduced. A screenshot of the Chronicle tab tells the story faster than a description of it.`
+              : `Welcome, @${AUTHOR} — first post here.\n\n` +
+                `A note that saves a round trip: this simulator has no fitness function and nothing is trained, so "why did it not learn X" usually has an ecological answer rather than a machine-learning one. If you are reporting something odd, the **hyperparameters**, the **tick count**, and whether organisms still had eyes are the details that make it diagnosable.\n\n` +
+                `The [wiki](https://github.com/${context.repo.owner}/${context.repo.repo}/wiki) covers the brain architecture and the sense/action layout.`;
+
+            await github.graphql(`
+              mutation($discussionId:ID!, $body:String!) {
+                addDiscussionComment(input: {discussionId:$discussionId, body:$body}) {
+                  comment { id }
+                }
+              }`, { discussionId: DISCUSSION_ID, body });
+
+            core.info(`Greeted ${AUTHOR} in ${CATEGORY}.`);

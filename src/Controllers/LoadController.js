@@ -1,91 +1,85 @@
+// The upstream project shipped curated worlds, organisms and mod links in this
+// panel. This engine does not carry those: its world files and brains are a
+// different format and there is no mod loader. What a visitor needs instead is
+// where the project lives, who it came from, and what else is worth playing.
 const LoadController = {
     init() {
-        $('#close-load-btn').click(()=>{
+        $('#close-load-btn').click(() => {
             this.close();
         });
-        $('#load-custom-btn').click(()=>{
-            $('#upload-json').click();
-        });
-        $('#community-creations-btn').click(()=>{
+        $('#community-creations-btn').click(() => {
             this.open();
         });
-        let panel = this;
-        $(".load-panel").on('click', '.list-item', async function() {
-            let list_name = $(this).closest(".list-container").attr('id');
-			let value = $(this).find('.hidden-value').text();
-            if (list_name === 'worlds-list-container') {
-                const base = `./assets/worlds/`;
-                let resp = await fetch(base+value+'.json');
-                let json = await resp.json();
-                panel.control_panel.loadEnv(json);
-                panel.close();
-            }
-            else if (list_name === 'organisms-list-container') {
-                const base = `./assets/organisms/`;
-                let resp = await fetch(base+value+'.json');
-                let json = await resp.json();
-                panel.control_panel.editor_controller.loadOrg(json);
-                panel.close();
-                $('#maximize').click();
-                $('#editor').click();
-            }
-            else if (list_name === 'mods-list-container') { 
-                window.open(value, '_blank');
-            }
+        $('#load-custom-btn').click(() => {
+            $('#upload-json').click();
         });
 
-        $('#load-env-btn').click(async ()=>{
-
-        });
-        $('#load-org-btn').click(async ()=>{
-
-        });
-        
-        this.loadList('worlds');
-        this.loadList('organisms');
-        this.loadList('mods');
+        this.render();
     },
 
-    async loadList(name) {
-        const base = `./assets/${name}/`;
-
-        let list = [];
+    async render() {
+        let data;
         try {
-            let resp = await fetch(base+'_list.json');
-            list = await resp.json();
-        } catch(e) {
-            console.error('Failed to load list: ', e);
+            const resp = await fetch('./assets/community.json');
+            data = await resp.json();
+        } catch (e) {
+            console.error('Failed to load community data:', e);
+            return;
         }
-        
-        let id = `#${name}-list`
-        $(id).empty();
-        for (let item of list) {
-            let html = `<li class="list-item">
-                        ${item.name}`;
-            if (item.subname) 
-                html += `<br>(${item.subname})`;
-            html +=`<div class="hidden-value" hidden>${item.value}</div>
-                    </li>`;
-            $(id).append(html);
+
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        // Only http(s) reaches an href. The file is ours, but a link target is
+        // the one field where a typo becomes a javascript: URL.
+        const safeUrl = (u) => /^https?:\/\//i.test(u || '') ? u : '#';
+
+        const up = data.upstream || {};
+        $('#community-upstream').html(
+            `${esc(up.note || '')} ` +
+            `<a href="${esc(safeUrl(up.repo))}" target="_blank" rel="noopener noreferrer">` +
+            `${esc(up.name || 'upstream')}</a> by ${esc(up.author || '')}` +
+            (up.demo ? ` &middot; <a href="${esc(safeUrl(up.demo))}" target="_blank" rel="noopener noreferrer">play it</a>` : '')
+        );
+
+        $('#community-link-grid').html((data.links || []).map((l) => `
+            <a class="community-link" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">
+                <i class="fa ${esc(l.icon || 'fa-link')}"></i>
+                <span class="community-link-label">${esc(l.label)}</span>
+                <span class="community-link-blurb">${esc(l.blurb || '')}</span>
+            </a>`).join(''));
+
+        const similar = data.similar || [];
+        if (!similar.length) {
+            $('#similar-projects').html('<p class="community-note">No entries yet.</p>');
+            return;
         }
+        $('#similar-projects').html(similar.map((s) => `
+            <a class="similar-card" href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">
+                <span class="similar-name">${esc(s.name)}${s.demo ? '<span class="similar-demo">playable</span>' : ''}</span>
+                <span class="similar-meta">${esc([s.language, s.stars ? s.stars + '\u2605' : null, s.status]
+                    .filter(Boolean).join(' \u00b7 '))}</span>
+                <span class="similar-why">${esc(s.why || '')}</span>
+            </a>`).join(''));
     },
 
     async open() {
-        $('.load-panel').addClass('open').css('display','flex');
+        $('.load-panel').addClass('open').css('display', 'flex');
     },
 
     loadJson(callback) {
-        $('#upload-json').change((e)=>{
+        $('#upload-json').change((e) => {
             let files = e.target.files;
-            if (!files.length) {return;};
+            if (!files.length) { return; }
             let reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (ev) => {
                 try {
-                    let json=JSON.parse(e.target.result);
+                    let json = JSON.parse(ev.target.result);
                     callback(json);
                     this.close();
-                } catch(e) {
-                    console.error(e)
+                } catch (err) {
+                    console.error(err);
                     alert('Failed to load');
                 }
                 $('#upload-json')[0].value = '';
@@ -96,11 +90,10 @@ const LoadController = {
     },
 
     close() {
-        $('.load-panel').removeClass('open').css('display','none');
-        $('#load-selected-btn').off('click');
+        $('.load-panel').removeClass('open').css('display', 'none');
         $('#upload-json').off('change');
     }
-}
+};
 
 $(document).ready(() => {
     LoadController.init();

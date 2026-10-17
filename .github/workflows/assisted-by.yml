@@ -1,0 +1,68 @@
+name: Assisted-by disclosure
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+# pull_request_target runs with a token that can comment on a fork's PR. It
+# never checks out or runs the PR's code, so untrusted code is not executed;
+# only the metadata below is read.
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  disclosure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for disclosure, and say how to add it
+        uses: actions/github-script@v7
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            // Read the body from env rather than interpolating it, so PR text
+            // cannot reach a shell or the script source.
+            const body = process.env.PR_BODY || '';
+
+            const commits = await github.paginate(
+              github.rest.pulls.listCommits,
+              { ...context.repo, pull_number: pr.number, per_page: 100 }
+            );
+
+            const trailer = /^\s*Assisted-by:\s*\S/im;
+            const hasTrailer = commits.some(c => trailer.test(c.commit.message));
+            const hasBodyNote = trailer.test(body) ||
+              /\b(assisted|generated|written)\s+(by|with)\b.*\b(ai|llm|model|copilot|claude|gpt|cursor|gemini)\b/i.test(body) ||
+              /\bno ai\b|\bwritten by hand\b|\bunassisted\b/i.test(body);
+
+            // An agent must never add Signed-off-by: only a person can certify
+            // the DCO, so a trailer pair like that is a real problem.
+            const signedOffByAgent = commits.some(c =>
+              /^\s*Assisted-by:/im.test(c.commit.message) &&
+              /^\s*Signed-off-by:.*\b(bot|agent|ai)\b/im.test(c.commit.message));
+
+            const marker = '<!-- assisted-by-check -->';
+            const existing = await github.paginate(
+              github.rest.issues.listComments,
+              { ...context.repo, issue_number: pr.number, per_page: 100 }
+            );
+            const mine = existing.find(c => c.body && c.body.includes(marker));
+
+            let msg = null;
+            if (signedOffByAgent) {
+              msg = `${marker}\n**A \`Signed-off-by\` here names a bot or agent.** Only a person can certify the DCO, so that trailer has to be a human. \`Assisted-by:\` is the one that records model help — it is disclosure, not credit.`;
+            } else if (!hasTrailer && !hasBodyNote) {
+              msg = `${marker}\nThis project accepts LLM-assisted contributions and asks you to say so. Either add a trailer to a commit:\n\n\`\`\`\nAssisted-by: <tool name>\n\`\`\`\n\nor one line in the description saying what helped (or that nothing did). It costs nothing and tells a reviewer where to look harder.\n\nThe part that is not optional: you own the result, and if a reviewer asks a question you answer it yourself rather than feeding the comment back to a model. See [AGENTS.md](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/AGENTS.md).`;
+            }
+
+            if (msg) {
+              if (mine) await github.rest.issues.updateComment({ ...context.repo, comment_id: mine.id, body: msg });
+              else await github.rest.issues.createComment({ ...context.repo, issue_number: pr.number, body: msg });
+              core.info('Asked for disclosure.');
+            } else {
+              // Resolved: remove the nag rather than leaving a stale thread.
+              if (mine) await github.rest.issues.deleteComment({ ...context.repo, comment_id: mine.id });
+              core.info('Disclosure present.');
+            }

@@ -1,0 +1,65 @@
+name: Bug report
+description: Something is broken, as opposed to strange.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This engine does strange things on purpose. If you are not sure whether
+        what you saw is a defect or evolution being evolution, a
+        [discussion](https://github.com/theomgdev/AlienLifeEngine/discussions)
+        gets a faster answer than an issue.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: |
+        Steps, and the state the world was in. An exported world file is worth
+        more than a description of one.
+      placeholder: |
+        1. Fresh world, default parameters except ...
+        2. Around tick ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: params
+    attributes:
+      label: Hyperparameters you changed
+      description: Defaults are fine to say as "defaults".
+      placeholder: brain size 32, shared fraction 0.7, everything else default
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Where you ran it
+      placeholder: hosted demo, or a local build at commit abc1234
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 131 on Windows 11, desktop
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Anything red in the browser console, verbatim.
+      render: text

@@ -1,19 +1,28 @@
 # Alien Life Engine
 
+**[Open the simulator](https://theomgdev.github.io/AlienLifeEngine/)**
+
+[![CI](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/ci.yml)
+[![Pages](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/pages.yml/badge.svg)](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/pages.yml)
+[![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+
+follows [Keel](https://github.com/theomgdev/keel)
+
 A world where every organism that can see thinks with an evolved neural brain —
-and a quarter of that mind is not its own.
+and half of that mind is not its own.
 
 Nothing is taught here and nothing is trained. The weights are shaped by
 selection alone.
 
 ## The hive mind
 
-Every sighted organism carries an N×N fully connected recurrent network. Its
-state vector is split in two:
+Every sighted organism carries a recurrent network: senses enter through their
+own weight matrix, the state vector carries between ticks, and actions are read
+out through a third. That state vector is split in two:
 
-- **three quarters private** — the creature's own memory, carried between ticks
-- **one quarter shared** — read from and written back into a field around it,
-  which every nearby mind also reads and writes
+- **half private** — the creature's own memory, untouched by anyone else
+- **half shared** — read from and written back into a field around it, which
+  every nearby mind also reads and writes
 
 Weights stay private and inherited, so two creatures touching the same substrate
 interpret it through different minds. Thought becomes an environment that life
@@ -98,17 +107,46 @@ fails — and wastes the food — if the target cells are occupied.
 
 A body mutates by changing, losing or adding a cell. Gaps and disconnected cells
 are allowed; that is a feature. The brain mutates on the same event rather than
-on a 10% side-branch, so the mind is always under selection.
+on a 10% side-branch, so the mind is always under selection. Mutation rate is
+itself inherited and drifts, so lineages evolve how fast they evolve.
+
+A child inherits its parent's body, brain and mutability, but faces a random
+direction. That roll is the only spatial exploration a rooted producer has, and
+it is what keeps a lineage from being a single orientation forever.
 
 ### Eyes and brains
 
 An eye has a direction, shown by the slit, and sees the first non-empty cell
-within range. Every eye on a body reports, and all of those reports are fed to
-the brain together, so more eyes genuinely means more perception. The brain's
-output steers movement; its state carries between ticks, and a quarter of that
-state is shared with every mind nearby.
+within range. Up to four eyes report at once, each contributing what it sees and
+how close it is, so more eyes genuinely means more perception. Alongside those
+the brain feels hunger, bodily integrity, age, and one channel of pure noise —
+a random drive evolution can wire into exploration or ignore entirely.
+
+It answers on nine channels: four absolute headings, hold, halt, reverse, and
+two body turns. Turning is a decision with a cost, because an eye's direction is
+fixed to the body: a creature that wants to look somewhere else has to spend a
+move rotating, and the turn fails if the body does not fit.
+
+Nothing rescues a creature that gets stuck. Walk into a wall and the move simply
+fails, with no random jolt to shake you loose — escaping is the brain's own
+problem, solved with memory, a reverse or a turn, and a lineage that cannot
+manage it dies. Movement contains no randomness at all; the dice are reserved
+for birth, mutation and that one sensory channel.
+
+## Contributing
+
+Issues and pull requests are welcome, including LLM-assisted ones — this project
+asks only that you disclose the assistance and can defend the change yourself.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the mechanics and
+[AGENTS.md](AGENTS.md) for the rules an assistant works under here.
+
+Worlds, lineages and questions belong in
+[Discussions](https://github.com/theomgdev/AlienLifeEngine/discussions); the
+[wiki](https://github.com/theomgdev/AlienLifeEngine/wiki) covers the brain
+architecture and every hyperparameter.
 
 ## Credit
 
-Built on [The Life Engine](https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2)
-by Max Robinson. GPL-3.0, as is this.
+A fork of [The Life Engine](https://github.com/MaxRobinsonTheGreat/LifeEngine)
+by Max Robinson. The cell-based body plan, the grid, and the idea that evolution
+needs no fitness function are all his. GPL-3.0, as is this.

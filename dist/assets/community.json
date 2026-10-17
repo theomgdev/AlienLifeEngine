@@ -1,0 +1,30 @@
+{
+  "upstream": {
+    "name": "The Life Engine",
+    "author": "Max Robinson",
+    "repo": "https://github.com/MaxRobinsonTheGreat/LifeEngine",
+    "demo": "https://thelifeengine.net/",
+    "note": "This engine is a fork of The Life Engine. The cell-based body plan, the grid, and the idea that evolution needs no fitness function are all his."
+  },
+  "links": [
+    {
+      "label": "Discussions",
+      "icon": "fa-comments",
+      "url": "https://github.com/theomgdev/AlienLifeEngine/discussions",
+      "blurb": "Show a world, ask a question, report something strange."
+    },
+    {
+      "label": "Wiki",
+      "icon": "fa-book",
+      "url": "https://github.com/theomgdev/AlienLifeEngine/wiki",
+      "blurb": "Brain architecture, sense and action layout, hyperparameters."
+    },
+    {
+      "label": "Source",
+      "icon": "fa-github",
+      "url": "https://github.com/theomgdev/AlienLifeEngine",
+      "blurb": "GPL-3.0. Issues and pull requests welcome."
+    }
+  ],
+  "similar": []
+}

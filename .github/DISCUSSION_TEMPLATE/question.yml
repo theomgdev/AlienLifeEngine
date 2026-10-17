@@ -1,0 +1,24 @@
+title: "[Q] "
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing before asking why organisms did not learn something:
+        nothing here is trained and there is no fitness function, so the answer
+        is usually ecological rather than machine-learning. The
+        [wiki](https://github.com/theomgdev/AlienLifeEngine/wiki) covers the
+        brain architecture and the sense/action layout.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What you were looking at
+      description: Hyperparameters, tick count, whether the population still had eyes.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Show a world, or ask how something works
+    url: https://github.com/theomgdev/AlienLifeEngine/discussions
+    about: Worlds, lineages, odd behaviour you are not sure is a bug, and questions.
+  - name: Brain architecture and parameter reference
+    url: https://github.com/theomgdev/AlienLifeEngine/wiki
+    about: Sense and action layout, the collective field, what each hyperparameter does.

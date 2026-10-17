@@ -1,0 +1,38 @@
+title: "[World] "
+labels: [showcase]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The two things people will ask for are the world file and what you
+        changed, so the run can be reproduced.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened in it
+      description: The phenomenon, in your own words.
+    validations:
+      required: true
+
+  - type: input
+    id: params
+    attributes:
+      label: Hyperparameters you changed
+      placeholder: defaults except mutation 10%, shared fraction 0.5
+    validations:
+      required: true
+
+  - type: input
+    id: ticks
+    attributes:
+      label: Roughly how far in
+      placeholder: around 40k ticks
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: World file or screenshots
+      description: |
+        Drag an exported world JSON in here. A screenshot of the Chronicle tab
+        tells the story faster than a description of it.

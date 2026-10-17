@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Bundle must exist and be non-empty
+        run: test -s dist/js/bundle.js
+
+      # There is no unit test suite. These load the real modules and assert the
+      # invariants that silently sterilise the simulation when broken, so a PR
+      # that violates one fails here instead of in someone's browser.
+      - name: Engine invariants
+        run: node .github/scripts/invariants.js
+
+  headless-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Load the built page and tick the world
+        run: |
+          npx --yes puppeteer@23 browsers install chrome
+          node .github/scripts/smoke.js

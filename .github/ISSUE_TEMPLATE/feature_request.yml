@@ -1,0 +1,36 @@
+name: Idea
+description: A mechanic, a sense, an action, or something the UI should show.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two premises are not up for negotiation, so an idea built on changing
+        them needs to argue for that explicitly: nothing is trained and there
+        is no fitness function, and movement is deterministic because a
+        creature that cannot escape an obstacle is meant to die of it.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What it would let evolution do that it cannot do now
+      description: |
+        The useful framing is pressure and opportunity rather than outcome —
+        what a lineage could exploit, not what you want it to end up doing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: What it costs
+      description: |
+        New senses and actions widen every brain's matrices and are paid for by
+        every organism every tick. A guess is fine; saying "unknown" is fine too.
