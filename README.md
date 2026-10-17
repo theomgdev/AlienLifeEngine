@@ -5,8 +5,7 @@
 [![CI](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/ci.yml)
 [![Pages](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/pages.yml/badge.svg)](https://github.com/theomgdev/AlienLifeEngine/actions/workflows/pages.yml)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-
-follows [Keel](https://github.com/theomgdev/keel)
+[![follows Keel](https://img.shields.io/badge/follows-Keel-1f6feb)](https://github.com/theomgdev/keel)
 
 A world where every organism that can see thinks with an evolved neural brain —
 and half of that mind is not its own.
