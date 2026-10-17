@@ -10,6 +10,11 @@ updates:
       # in, and this repo's dependency tree is small enough to review at once.
       all:
         patterns: ["*"]
+    ignore:
+      # jQuery 4 breaks the UI layer: the built page loads but the world comes
+      # up empty. Migrating is its own piece of work, not a routine bump.
+      - dependency-name: jquery
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
