@@ -26,5 +26,204 @@
       "blurb": "GPL-3.0. Issues and pull requests welcome."
     }
   ],
-  "similar": []
+  "similar": [
+    {
+      "name": "The Life Engine",
+      "url": "https://github.com/MaxRobinsonTheGreat/LifeEngine",
+      "stars": 573,
+      "language": "JavaScript",
+      "status": "the original",
+      "demo": "https://thelifeengine.net/",
+      "why": "Max Robinson's cell-based natural selection sim. This engine is a fork of it."
+    },
+    {
+      "name": "LifeEngineExtended",
+      "url": "https://github.com/SuperSpaceEye/LifeEngineExtended",
+      "stars": 13,
+      "language": "C++",
+      "status": "fork",
+      "demo": "https://lifeengineextended.github.io/",
+      "why": "C++/Qt6 rewrite with CUDA acceleration, a WASM build and an organism construction language."
+    },
+    {
+      "name": "LFE-NNUE",
+      "url": "https://github.com/SahilKDas/LFE-NNUE",
+      "stars": 0,
+      "language": "C++",
+      "status": "fork, active",
+      "demo": null,
+      "why": "Evolvable sparse neural brains, 2.5D elevation habitats and a soil nutrient cycle."
+    },
+    {
+      "name": "EvolutionSimulatorV2",
+      "url": "https://github.com/lllllllllwith10ls/EvolutionSimulatorV2",
+      "stars": 1,
+      "language": "JavaScript",
+      "status": "fork, active",
+      "demo": "https://lllllllllwith10ls.github.io/EvolutionSimulatorV2/",
+      "why": "Adds meat dropped on death, so carnivory has its own resource."
+    },
+    {
+      "name": "Life3D",
+      "url": "https://github.com/GageHowe/Life3D",
+      "stars": 2,
+      "language": "Rust",
+      "status": "fork",
+      "demo": null,
+      "why": "The same grid mechanics and body plans, extended into three dimensions."
+    },
+    {
+      "name": "Avida",
+      "url": "https://github.com/devosoft/avida",
+      "stars": 669,
+      "language": "C++",
+      "status": "landmark, active",
+      "demo": "https://avida-ed.github.io/Avida-ED3/AvidaED.html",
+      "why": "Self-replicating programs competing for CPU cycles. The platform most ALife papers cite."
+    },
+    {
+      "name": "Tierra",
+      "url": "https://github.com/bioerrorlog/Tierra",
+      "stars": 38,
+      "language": "C",
+      "status": "landmark",
+      "demo": null,
+      "why": "Tom Ray's 1991 simulator, where digital parasites evolved without anyone designing them."
+    },
+    {
+      "name": "Polyworld",
+      "url": "https://github.com/polyworld/polyworld",
+      "stars": 214,
+      "language": "C++",
+      "status": "landmark",
+      "demo": null,
+      "why": "Larry Yaeger's ecology of neural-brained agents with vision, genetics and metabolism."
+    },
+    {
+      "name": "Framsticks",
+      "url": "http://www.framsticks.com/",
+      "stars": null,
+      "language": "C++",
+      "status": "active since 1996",
+      "demo": "http://www.framsticks.com/",
+      "why": "Continuous 3D creatures: evolved morphology, real physics, neural control."
+    },
+    {
+      "name": "Evolve 4.0",
+      "url": "https://github.com/rubberduck203/Evolve",
+      "stars": 68,
+      "language": "C++",
+      "status": "landmark",
+      "demo": "https://rubberduck203.github.io/Evolve/",
+      "why": "Multicellular organisms running Forth-like genetic code under strict energy conservation."
+    },
+    {
+      "name": "Darwinbots",
+      "url": "https://github.com/darwinbots/Darwinbots2",
+      "stars": 4,
+      "language": "C++",
+      "status": "active",
+      "demo": "https://darwinbots-wasm.org",
+      "why": "Bots with DNA bytecode, physical bodies, feeding ties and venom."
+    },
+    {
+      "name": "BioSim4",
+      "url": "https://github.com/davidrmiller/biosim4",
+      "stars": 3366,
+      "language": "C++",
+      "status": "active",
+      "demo": null,
+      "why": "Evolvable neural nets under survival pressure, with the clearest write-up in the field."
+    },
+    {
+      "name": "Scriptbots",
+      "url": "https://github.com/karpathy/scriptsbots",
+      "stars": 184,
+      "language": "C++",
+      "status": "landmark",
+      "demo": null,
+      "why": "Karpathy's predator-prey world: neural brains, sensory cones, open-ended reproduction."
+    },
+    {
+      "name": "Evolution",
+      "url": "https://github.com/keiwando/evolution",
+      "stars": 456,
+      "language": "C#",
+      "status": "active",
+      "demo": "https://keiwan.itch.io/evolution",
+      "why": "Build a creature from bones and muscles, then watch it evolve a way to walk."
+    },
+    {
+      "name": "GenePool",
+      "url": "https://www.swimbots.com/",
+      "stars": null,
+      "language": "JavaScript",
+      "status": "active",
+      "demo": "https://www.swimbots.com/",
+      "why": "Ventrella's swimbots evolve a swimming gait and a taste in mates."
+    },
+    {
+      "name": "Evolved Virtual Creatures",
+      "url": "https://github.com/mattatz/EvolvingVirtualCreatures",
+      "stars": 66,
+      "language": "C#",
+      "status": "reimplementation",
+      "demo": null,
+      "why": "An open recreation of Karl Sims' 1994 paper, the ancestor of every creature sim."
+    },
+    {
+      "name": "Lenia",
+      "url": "https://github.com/Chakazul/Lenia",
+      "stars": 3882,
+      "language": "Python",
+      "status": "active",
+      "demo": "https://chakazul.github.io/Lenia/JavaScript/Lenia.html",
+      "why": "A continuous cellular automaton whose creatures swim, turn and hold themselves together."
+    },
+    {
+      "name": "Particle Life",
+      "url": "https://github.com/hunar4321/particle-life",
+      "stars": 3360,
+      "language": "JavaScript",
+      "status": "active",
+      "demo": "https://hunar4321.github.io/particle-life/particle_life.html",
+      "why": "Cell-like structures and locomotion out of nothing but an attraction matrix."
+    },
+    {
+      "name": "Growing Neural Cellular Automata",
+      "url": "https://github.com/google-research/self-organising-systems",
+      "stars": 448,
+      "language": "Python",
+      "status": "active",
+      "demo": "https://distill.pub/2020/growing-ca/",
+      "why": "Differentiable cellular automata that grow a pattern and regenerate when cut."
+    },
+    {
+      "name": "SmoothLife",
+      "url": "https://github.com/duckythescientist/SmoothLife",
+      "stars": 707,
+      "language": "Python",
+      "status": "landmark",
+      "demo": "https://rreusser.github.io/regl-smooth-life/",
+      "why": "Conway's Life generalised to continuous space, time and state."
+    },
+    {
+      "name": "POET",
+      "url": "https://github.com/uber-research/poet",
+      "stars": 269,
+      "language": "Python",
+      "status": "landmark",
+      "demo": null,
+      "why": "Co-evolves agents and the obstacles they face, so the problem keeps getting harder."
+    },
+    {
+      "name": "QDax",
+      "url": "https://github.com/adaptive-intelligent-robotics/QDax",
+      "stars": 364,
+      "language": "Python",
+      "status": "active",
+      "demo": null,
+      "why": "MAP-Elites on accelerators: searching for behavioural diversity rather than one winner."
+    }
+  ]
 }

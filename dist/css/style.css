@@ -1278,12 +1278,9 @@ input[type="checkbox"].ui-switch:checked::after {
 }
 
 .similar-name {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    flex-wrap: wrap;
     font-size: 13px;
     font-weight: 700;
+    line-height: 1.4;
     color: var(--text-primary);
 }
 
@@ -1300,9 +1297,21 @@ input[type="checkbox"].ui-switch:checked::after {
 }
 
 .similar-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     font-size: 11px;
     color: var(--accent-life);
     opacity: 0.85;
+}
+
+/* Keeps the status text on one line so the badge can hold the opposite end,
+   rather than the two competing for the same run of space. */
+.similar-meta > .similar-meta-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .similar-why {

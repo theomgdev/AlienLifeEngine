@@ -57,9 +57,9 @@ const LoadController = {
         }
         $('#similar-projects').html(similar.map((s) => `
             <a class="similar-card" href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">
-                <span class="similar-name">${esc(s.name)}${s.demo ? '<span class="similar-demo">playable</span>' : ''}</span>
-                <span class="similar-meta">${esc([s.language, s.stars ? s.stars + '\u2605' : null, s.status]
-                    .filter(Boolean).join(' \u00b7 '))}</span>
+                <span class="similar-name">${esc(s.name)}</span>
+                <span class="similar-meta"><span class="similar-meta-text">${esc([s.language, s.stars ? s.stars + '\u2605' : null, s.status]
+                    .filter(Boolean).join(' \u00b7 '))}</span>${s.demo ? '<span class="similar-demo">playable</span>' : ''}</span>
                 <span class="similar-why">${esc(s.why || '')}</span>
             </a>`).join(''));
     },
