@@ -25,7 +25,7 @@ jobs:
             this stays open; otherwise it closes in two weeks.
           stale-pr-message: >
             No activity here for three months. Comment if you are still on it,
-            otherwise this closes in two weeks — reopening is cheap.
+            otherwise this closes in two weeks -- reopening is cheap.
           close-issue-message: >
             Closing as stale. Reopen or comment if it is still live.
           close-pr-message: >

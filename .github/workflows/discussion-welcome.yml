@@ -50,9 +50,9 @@ jobs:
 
             const showcase = /showcase|creature|world/i.test(CATEGORY);
             const body = showcase
-              ? `Welcome, @${AUTHOR} — first post here.\n\n` +
+              ? `Welcome, @${AUTHOR} -- first post here.\n\n` +
                 `If you are showing off a world or a lineage, the two things people will ask for are the **seed or exported JSON** and the **hyperparameters you changed**, so the run can be reproduced. A screenshot of the Chronicle tab tells the story faster than a description of it.`
-              : `Welcome, @${AUTHOR} — first post here.\n\n` +
+              : `Welcome, @${AUTHOR} -- first post here.\n\n` +
                 `A note that saves a round trip: this simulator has no fitness function and nothing is trained, so "why did it not learn X" usually has an ecological answer rather than a machine-learning one. If you are reporting something odd, the **hyperparameters**, the **tick count**, and whether organisms still had eyes are the details that make it diagnosable.\n\n` +
                 `The [wiki](https://github.com/${context.repo.owner}/${context.repo.repo}/wiki) covers the brain architecture and the sense/action layout.`;
 
