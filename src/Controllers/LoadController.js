@@ -45,7 +45,7 @@ const LoadController = {
 
         $('#community-link-grid').html((data.links || []).map((l) => `
             <a class="community-link" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">
-                <i class="fa ${esc(l.icon || 'fa-link')}"></i>
+                <i class="${esc(l.icon || 'fa fa-link')}"></i>
                 <span class="community-link-label">${esc(l.label)}</span>
                 <span class="community-link-blurb">${esc(l.blurb || '')}</span>
             </a>`).join(''));

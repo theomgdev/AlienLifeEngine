@@ -9,19 +9,19 @@
   "links": [
     {
       "label": "Discussions",
-      "icon": "fa-comments",
+      "icon": "fa fa-comments",
       "url": "https://github.com/theomgdev/AlienLifeEngine/discussions",
       "blurb": "Show a world, ask a question, report something strange."
     },
     {
       "label": "Wiki",
-      "icon": "fa-book",
+      "icon": "fa fa-book",
       "url": "https://github.com/theomgdev/AlienLifeEngine/wiki",
       "blurb": "Brain architecture, sense and action layout, hyperparameters."
     },
     {
       "label": "Source",
-      "icon": "fa-github",
+      "icon": "fab fa-github",
       "url": "https://github.com/theomgdev/AlienLifeEngine",
       "blurb": "GPL-3.0. Issues and pull requests welcome."
     }
