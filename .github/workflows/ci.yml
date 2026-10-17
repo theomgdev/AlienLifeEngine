@@ -50,5 +50,6 @@ jobs:
 
       - name: Load the built page and tick the world
         run: |
-          npx --yes puppeteer@23 browsers install chrome
+          npm install --no-save puppeteer@23
+          npx puppeteer browsers install chrome
           node .github/scripts/smoke.js
