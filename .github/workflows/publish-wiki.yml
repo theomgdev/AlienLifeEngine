@@ -1,0 +1,62 @@
+name: Publish wiki
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/wiki/**"
+      - ".github/workflows/publish-wiki.yml"
+  workflow_dispatch:
+
+# This repository is the source of truth. The GitHub wiki is a second, separate
+# git repository that receives a mirror of docs/wiki/ after a source edit.
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mirror the wiki source
+        env:
+          WIKI_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          TARGET_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          source_dir="$GITHUB_WORKSPACE/docs/wiki"
+          test -d "$source_dir"
+
+          work_dir="$(mktemp -d)"
+          wiki_dir="$work_dir/wiki"
+          remote="https://x-access-token:${WIKI_TOKEN}@github.com/${TARGET_REPO}.wiki.git"
+
+          if ! git clone --quiet --depth 1 "$remote" "$wiki_dir"; then
+            echo "::error::Could not clone the wiki. Enable it and create one page in the GitHub UI first."
+            exit 1
+          fi
+
+          # docs/wiki/README.md explains the sync and is not itself a wiki page.
+          find "$wiki_dir" -mindepth 1 -maxdepth 1 -type f -name '*.md' -delete
+          find "$source_dir" -mindepth 1 -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec cp {} "$wiki_dir"/ \;
+
+          cd "$wiki_dir"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already matches docs/wiki/."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Sync from ${SOURCE_SHA}"
+          git push origin HEAD:master
+          echo "Wiki published."

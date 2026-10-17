@@ -24,10 +24,9 @@ are inherited, mutated, and kept or lost depending on whether their owner ate.
 ## Where to start if you just opened it
 
 Worlds begin with a crowd rather than one ancestor: roughly one founder per 100
-grid cells, all of them with a 10% mutation rate, all of them facing random
-directions. Most of those lineages die. Several founding populations going
-extinct before one takes hold is the normal case, not a bug — producers choke on
-their own food litter before anything with eyes evolves to eat them.
+grid cells, all of them with a 10% mutation rate and random birth directions.
+A normal world usually establishes; very small worlds can still go extinct early
+if producers fill their own reproduction space before mobile grazers emerge.
 
 Press **V** to see the collective field. That nebula is thought, and it moves
 like a circulatory system once a population is large enough to sustain it.
