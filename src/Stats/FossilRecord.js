@@ -325,9 +325,13 @@ const FossilRecord = {
         for (let c of CellStates.living) {
             cell_counts[c.name] = 0;
         }
+        // Hoisted: numExtantSpecies() rebuilds an array of every species, so
+        // asking per species made this O(S^2) -- 114 ms at 1066 species. The
+        // map is untouched below, so the count cannot change mid-loop.
+        const species_count = this.numExtantSpecies();
         var first=true;
         for (let s of Object.values(this.extant_species)) {
-            if (!first && this.numExtantSpecies() > 10 && s.cumulative_pop < this.min_discard){
+            if (!first && species_count > 10 && s.cumulative_pop < this.min_discard){
                 continue;
             }
             for (let name in s.cell_counts) {
