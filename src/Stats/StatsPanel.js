@@ -3,6 +3,7 @@ const SpeciesChart = require("./Charts/SpeciesChart");
 const MutationChart = require("./Charts/MutationChart");
 const CellsChart = require("./Charts/CellsChart");
 const FossilRecord = require("./FossilRecord");
+const SpeciesLink = require("../Controllers/SpeciesLink");
 
 
 const ChartSelections = [PopulationChart, SpeciesChart, CellsChart, MutationChart];
@@ -56,11 +57,34 @@ class StatsPanel {
         $('#species-count').text("Number of Species: " + sp_count);
         let top_species = FossilRecord.getMostPopulousSpecies();
         if (top_species)
-            $('#top-species').text("Most Populous Species: \"" + top_species.name + "\" (" + top_species.population + " organisms)");
-        else    
+            this.renderTopSpecies(top_species);
+        else {
+            this.last_top = null;
             $('#top-species').text("Most Populous Species: None");
+        }
         $('#largest-org').text("Largest Organism Ever: " + this.env.largest_cell_count + " cells");
         $('#avg-mut').text("Average Mutation Rate: " + Math.round(this.env.averageMutability() * 100) / 100);
+    }
+
+    /**
+     * The dominant lineage, as a link to its body in the editor.
+     *
+     * This runs on every frame, and writing innerHTML that often is exactly the
+     * kind of cost a clickable name must not introduce. The name changes rarely
+     * while its population moves constantly, so the markup is rebuilt only when
+     * the NAME changes and the count is written into its own text node the rest
+     * of the time.
+     */
+    renderTopSpecies(species) {
+        if (species.name !== this.last_top) {
+            this.last_top = species.name;
+            const esc = (s) => String(s).replace(/[&<>"]/g, ch =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+            $('#top-species').html(
+                'Most Populous Species: "' + SpeciesLink.render(species.name, esc) +
+                '" (<span id="top-species-pop"></span> organisms)');
+        }
+        $('#top-species-pop').text(species.population);
     }
 
     reset() {

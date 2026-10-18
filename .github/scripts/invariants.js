@@ -203,6 +203,60 @@ check('MAX_EYES leaves room for valence + proximity pairs',
     Hyperparams.rotationEnabled = before;
 }
 
+// --- a named species can be opened ---------------------------------------
+// Every species name shown in the UI is a link to that body in the editor. The
+// living ones still hold their Anatomy; the dead ones only have the snapshot
+// written at fossilisation, and both arrive in the same `anatomy` field. A
+// version that assumed one shape produced cells with state: undefined and threw
+// inside the cell factory on click, so CI checks both paths.
+{
+    const { anatomyOfSpecies } = r('src/Stats/FossilAnatomy');
+    const FossilRecord = r('src/Stats/FossilRecord');
+
+    const cols = 30, rows = 30;
+    const cells = [];
+    for (let c = 0; c < cols; c++) {
+        cells[c] = [];
+        for (let rr = 0; rr < rows; rr++) cells[c][rr] = { state: CellStates.empty, owner: null, cell_owner: null, c, r: rr };
+    }
+    const at = (c, rr) => (c >= 0 && rr >= 0 && c < cols && rr < rows) ? cells[c][rr] : null;
+    const env = {
+        grid_map: { cols, rows, cellAt: at, getCenter: () => [15, 15] },
+        changeCell: (c, rr, s, o) => { const x = at(c, rr); if (x) { x.state = s; x.cell_owner = o; x.owner = o ? o.org : null; } },
+        total_ticks: 100, collective_field: null, organisms: [], addOrganism() {},
+        averageMutability: () => 10,
+    };
+    env.brain_arena = new BrainArena(8, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
+    FossilRecord.setEnv(env);
+
+    const org = new Organism(15, 15, env);
+    org.anatomy.addDefaultCell(CellStates.mouth, 0, 0);
+    org.anatomy.addDefaultCell(CellStates.eye, 0, -1);
+    org.anatomy.addDefaultCell(CellStates.killer, 1, 0);
+    org.updateGrid();
+
+    const species = FossilRecord.addSpecies(org, null);
+    const usable = (a) => !!(a && a.cells && a.cells.length &&
+        a.cells.every((c) => c.state && c.state.name && c.loc_col !== undefined));
+
+    check('a living species can be opened in the editor', usable(anatomyOfSpecies(species)));
+
+    species.cumulative_pop = 50;   // above min_discard, so the fossil is kept
+    const name = species.name;
+    FossilRecord.fossilize(species);
+    const fossil = FossilRecord.extinct_species[name];
+
+    const rebuilt = anatomyOfSpecies(fossil);
+    check('an extinct species can be opened in the editor', usable(rebuilt));
+
+    const shapes = rebuilt ? rebuilt.cells.map((c) => `${c.state.name}@${c.loc_col},${c.loc_row}`).sort().join(' ') : '';
+    check('the rebuilt body matches the living one',
+        shapes === 'eye@0,-1 killer@1,0 mouth@0,0', shapes);
+
+    const eye = rebuilt ? rebuilt.cells.find((c) => c.state.name === 'eye') : null;
+    check('eye facing survives fossilisation', !!eye && eye.direction !== undefined);
+}
+
 console.log('');
 if (failures) {
     console.log(`${failures} invariant(s) failed`);

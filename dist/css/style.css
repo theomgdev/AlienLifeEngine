@@ -1590,3 +1590,27 @@ input[type="checkbox"].ui-switch:checked::after {
 }
 
 .hive-notice.visible { display: block; }
+
+/* ---- Clickable species names ------------------------------------------
+   A name in the Chronicle or the census opens that body in the editor. The
+   cue is deliberately quiet: a dotted underline rather than link blue, so a
+   dense log still reads as prose instead of a wall of links. */
+.species-link {
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(21, 222, 89, 0.45);
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+
+.species-link:hover,
+.species-link:focus-visible {
+    color: var(--accent-life);
+    border-bottom-color: var(--accent-life);
+}
+
+.species-link:focus-visible {
+    outline: 1px solid var(--accent-life);
+    outline-offset: 2px;
+}

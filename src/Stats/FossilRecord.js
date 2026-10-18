@@ -106,6 +106,31 @@ const FossilRecord = {
     numExtinctSpecies() {return Object.values(this.extinct_species).length},
     speciesIsExtant(species_name) {return !!this.extant_species[species_name]},
 
+    /**
+     * A body the editor can rebuild, kept as plain numbers rather than live cells.
+     *
+     * The fossil record deliberately drops the heavy Anatomy object, but cell
+     * COUNTS alone cannot be drawn: a name in the Chronicle is only clickable if
+     * the positions survived too. This is three numbers per cell plus an eye's
+     * facing, so a full 4000-fossil record costs roughly a megabyte and nothing
+     * per tick — the copy happens once, at death.
+     */
+    snapshotAnatomy: function(anatomy) {
+        if (!anatomy || !anatomy.cells) return null;
+        const cells = [];
+        for (const cell of anatomy.cells) {
+            const entry = {
+                c: cell.loc_col,
+                r: cell.loc_row,
+                s: cell.state ? cell.state.name : 'mouth',
+            };
+            // Only eyes carry a facing, and it decides what the body can see.
+            if (cell.direction !== undefined) entry.d = cell.direction;
+            cells.push(entry);
+        }
+        return { cells, birth_distance: anatomy.birth_distance };
+    },
+
     fossilize: function(species) {
         if (!this.extant_species[species.name]) {
             console.warn('Tried to fossilize non existing species.');
@@ -131,6 +156,7 @@ const FossilRecord = {
                 cumulative_pop: species.cumulative_pop,
                 cell_counts: species.cell_counts,
                 cell_total: species.cell_total,
+                anatomy: this.snapshotAnatomy(species.anatomy),
             };
             this.trimExtinct();
             return true;

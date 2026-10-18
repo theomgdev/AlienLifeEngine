@@ -90,15 +90,24 @@ class Chronicle {
         this.last_pop = 0;
     }
 
-    /** Record an entry. `key` throttles repeats of the same kind of news. */
-    log(kind, text, key) {
+    /**
+     * Record an entry. `key` throttles repeats of the same kind of news.
+     *
+     * `species` names the lineage an entry is about, kept as its own field
+     * rather than being recovered from the prose later: a name can contain
+     * spaces and Roman numerals, and fishing it back out of a sentence with a
+     * pattern is how a panel starts linking the wrong words.
+     */
+    log(kind, text, key, species) {
         const tick = this.now;
         if (key) {
             const last = this['_k_' + key] || -1e9;
             if (tick - last < this.interval * 8) return;
             this['_k_' + key] = tick;
         }
-        this.entries.push({ tick, kind, text, epoch: this.epoch });
+        const entry = { tick, kind, text, epoch: this.epoch };
+        if (species) entry.species = species;
+        this.entries.push(entry);
         if (this.entries.length > this.limit) this.entries.shift();
         this.latest = this.entries[this.entries.length - 1];
         this.dirty = true;
@@ -238,7 +247,8 @@ class Chronicle {
                 if (life > 12000 && s.cumulative_pop > 400) {
                     this.log(KIND.DYNASTY,
                         `${s.name} is extinct after ${life.toLocaleString()} ticks ` +
-                        `and ${s.cumulative_pop.toLocaleString()} descendants.`);
+                        `and ${s.cumulative_pop.toLocaleString()} descendants.`,
+                        undefined, s.name);
                 }
             }
         }

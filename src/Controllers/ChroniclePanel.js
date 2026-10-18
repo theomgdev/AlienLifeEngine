@@ -7,6 +7,7 @@
 
 const FossilRecord = require("../Stats/FossilRecord");
 const Chronicle = require("../Narrative/Chronicle");
+const SpeciesLink = require("./SpeciesLink");
 
 const ICON = {
     genesis:    'fa-seedling',
@@ -52,16 +53,24 @@ class ChroniclePanel {
             $('#chronicle-log').html("<p class='chronicle-empty'>Nothing has happened yet.</p>");
             return;
         }
+        const esc = (s) => this.escape(s);
         const rows = [];
         // newest first: the interesting thing is almost always the latest
         for (let i = c.entries.length - 1; i >= 0; i--) {
             const e = c.entries[i];
             const icon = ICON[e.kind] || 'fa-circle';
+            // An entry that names a lineage carries it as its own field, so the
+            // name is linked by replacing that exact string in the escaped text
+            // rather than by pattern-matching words out of the sentence.
+            let text = esc(e.text);
+            if (e.species && SpeciesLink.isOpenable(e.species)) {
+                text = text.replace(esc(e.species), SpeciesLink.render(e.species, esc));
+            }
             rows.push(
                 `<div class='chron-row chron-${e.kind}'>` +
                 `<i class='fa ${icon} chron-icon'></i>` +
                 `<span class='chron-tick'>${e.tick.toLocaleString()}</span>` +
-                `<span class='chron-text'>${this.escape(e.text)}</span>` +
+                `<span class='chron-text'>${text}</span>` +
                 `</div>`);
         }
         $('#chronicle-log').html(rows.join(''));
@@ -80,12 +89,13 @@ class ChroniclePanel {
         const chain = FossilRecord.lineageOf(deepest);
         $('#lineage-sub').text(
             `${chain.length} generation${chain.length === 1 ? '' : 's'} of ancestry still traceable.`);
+        const esc = (s) => this.escape(s);
         // root at the top, so it reads as descent
         const rows = chain.slice().reverse().map((n, i) => {
             const alive = n.end_tick === -1;
             return `<div class='lin-row${alive ? ' lin-alive' : ''}' style='padding-left:${i * 11}px'>` +
                    `<span class='lin-branch'>${i === 0 ? '' : '└ '}</span>` +
-                   `<span class='lin-name'>${this.escape(n.name)}</span>` +
+                   SpeciesLink.render(n.name, esc, 'lin-name') +
                    `<span class='lin-gen'>g${n.generation}</span>` +
                    `</div>`;
         });
@@ -100,10 +110,11 @@ class ChroniclePanel {
             $('#dynasty-list').html("<p class='chronicle-empty'>No extinct lineages recorded yet.</p>");
             return;
         }
+        const esc = (s) => this.escape(s);
         const rows = dead.map(s => {
             const life = s.end_tick - s.start_tick;
             return `<div class='dyn-row'>` +
-                   `<span class='dyn-name'>${this.escape(s.name)}</span>` +
+                   SpeciesLink.render(s.name, esc, 'dyn-name') +
                    `<span class='dyn-stat'>${s.cumulative_pop.toLocaleString()} born</span>` +
                    `<span class='dyn-stat'>${life.toLocaleString()} ticks</span>` +
                    `</div>`;

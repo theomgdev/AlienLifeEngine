@@ -111,6 +111,34 @@ class OrganismEditor extends Environment{
         this.renderFull();
         this.controller.updateDetails();
     }
+
+    /**
+     * Put a body on the workbench from stored cells rather than a live organism.
+     *
+     * setOrganismToCopyOf needs an Organism that exists in a world; a species
+     * named in the Chronicle may have died thousands of ticks ago and survives
+     * only as the anatomy snapshot in the fossil record. This builds a fresh
+     * organism from those cells so a dead lineage can still be inspected.
+     *
+     * The brain is NOT restored: weights are per-individual and die with the
+     * body, so what comes back is the species' anatomy, not a resurrection.
+     */
+    setOrganismFromAnatomy(anatomy, species_name) {
+        if (!anatomy || !anatomy.cells || !anatomy.cells.length) return false;
+        if (this.organism && this.organism.brain && this.organism.brain.detach) {
+            this.organism.brain.detach();
+        }
+        this.grid_map.fillGrid(CellStates.empty);
+        var center = this.grid_map.getCenter();
+        this.organism = new Organism(center[0], center[1], this, null);
+        this.organism.anatomy.loadRaw(anatomy);
+        this.organism.updateGrid();
+        this.organism.species = new Species(this.organism.anatomy, null, 0);
+        if (species_name) this.organism.species.name = species_name;
+        this.renderFull();
+        this.controller.refreshDetailsPanel();
+        return true;
+    }
     
     getCopyOfOrg() {
         var new_org = new Organism(0, 0, null, this.organism);
