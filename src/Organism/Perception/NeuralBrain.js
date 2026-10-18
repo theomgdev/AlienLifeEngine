@@ -93,13 +93,27 @@ class NeuralBrain {
         }
     }
 
-    /** Inherit a parent's weights. Structure is passed on, state is not. */
+    /**
+     * Take on the structure of another brain.
+     *
+     * The parent can live in a DIFFERENT arena than this brain: the editor keeps
+     * its own small arena, so inspecting a world organism copies across arenas.
+     * Reading the parent's slot index out of this arena is what produced the
+     * "RMSNorm gain: NaN" in the editor — slot 150 does not exist in a 4-slot
+     * arena, the read returned undefined, and storing undefined into a
+     * Float32Array yields NaN. The weights shown were whatever happened to sit
+     * at the wrong offsets, so the panel was not describing that organism at all.
+     */
     copy(parentBrain) {
         if (!parentBrain || !parentBrain.arena || parentBrain.slot < 0) return;
         if (!this.arena) this.arena = parentBrain.arena;
         if (!this.field) this.field = parentBrain.field;
         if (this.slot < 0) this.slot = this.arena.alloc();
-        this.arena.copy(parentBrain.slot, this.slot);
+        if (this.arena === parentBrain.arena) {
+            this.arena.copy(parentBrain.slot, this.slot);
+        } else {
+            this.arena.copyFrom(parentBrain.arena, parentBrain.slot, this.slot);
+        }
     }
 
     mutate() {

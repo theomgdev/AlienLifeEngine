@@ -227,7 +227,8 @@ class EditorController extends CanvasController{
         if (info) {
             $('.chase-types').text(
                 `Neural brain: ${info.N}x${info.N} (${info.shared_n} shared / ${info.private_n} private)`);
-            $('.retreat-types').text(`RMSNorm gain: ${info.gain.toFixed(3)}`);
+            $('.retreat-types').text(
+                `RMSNorm gain: ${Number.isFinite(info.gain) ? info.gain.toFixed(3) : 'unavailable'}`);
             if (this.mind_viewer) this.mind_viewer.render(info);
         } else {
             $('.chase-types').text("Blind — no brain.");

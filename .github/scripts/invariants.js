@@ -318,6 +318,49 @@ check('MAX_EYES leaves room for valence + proximity pairs',
     FR.ancestor_limit = saved_limit;
 }
 
+// --- inspecting a brain across arenas ------------------------------------
+// The editor keeps its own small arena, so picking a world organism copies
+// between arenas. The old copy() read the parent's slot index out of the WRONG
+// arena: a slot past the editor's capacity returned undefined, which becomes
+// NaN in a Float32Array. That surfaced as "RMSNorm gain: NaN", but the real
+// damage was the weight matrix being read from wrong offsets entirely.
+{
+    const BrainArena = r('src/Organism/Perception/BrainArena');
+    const NeuralBrain = r('src/Organism/Perception/NeuralBrain');
+
+    const makeOwner = () => ({
+        c: 5, r: 5, direction: 0, living: true,
+        changeDirection(d) { this.direction = d; },
+        anatomy: { is_mover: true },
+    });
+
+    const world = new BrainArena(256, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
+    const editor = new BrainArena(4, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
+    for (let i = 0; i < 150; i++) world.alloc();   // push the parent to a high slot
+
+    const parent = new NeuralBrain(makeOwner());
+    parent.attach(world, null);
+    world.randomize(parent.slot, RNG, 0.6);
+    world.gain[parent.slot] = 1.37;
+    const parent_w = Array.from(world.W.subarray(world.wOffset(parent.slot),
+        world.wOffset(parent.slot) + shape.N * shape.N));
+
+    const copy = new NeuralBrain(makeOwner());
+    copy.attach(editor, null);
+    copy.copy(parent);
+    const info = copy.inspect();
+
+    check('a brain copied across arenas keeps a real gain',
+        Number.isFinite(info.gain) && Math.abs(info.gain - 1.37) < 1e-5, `gain=${info.gain}`);
+
+    let wdiff = 0;
+    for (let i = 0; i < parent_w.length; i++) {
+        wdiff = Math.max(wdiff, Math.abs(parent_w[i] - info.weights[i]));
+    }
+    check('a brain copied across arenas keeps its own weights', wdiff < 1e-6,
+        `max diff ${wdiff}`);
+}
+
 console.log('');
 if (failures) {
     console.log(`${failures} invariant(s) failed`);

@@ -94,6 +94,36 @@ class BrainArena {
         this.used--;
     }
 
+    /**
+     * Copy a brain in from a DIFFERENT arena.
+     *
+     * `copy` above uses copyWithin and is correct only inside one arena. The
+     * editor keeps its own small arena, so inspecting a world organism crosses
+     * arenas: the source offsets must be computed with the SOURCE geometry and
+     * the destination offsets with this one. Shapes must match, which they do
+     * because both arenas are built from the same BrainShape.
+     */
+    copyFrom(src, fromSlot, toSlot) {
+        const { N, private_n, sense_n, action_n } = this;
+        if (!src || src.N !== N || src.sense_n !== sense_n ||
+            src.action_n !== action_n || src.private_n !== private_n) return false;
+        if (fromSlot < 0 || fromSlot >= src.capacity) return false;
+        if (toSlot < 0 || toSlot >= this.capacity) return false;
+
+        this.W.set(src.W.subarray(src.wOffset(fromSlot), src.wOffset(fromSlot) + N * N),
+            this.wOffset(toSlot));
+        this.Win.set(src.Win.subarray(src.winOffset(fromSlot), src.winOffset(fromSlot) + N * sense_n),
+            this.winOffset(toSlot));
+        this.Wout.set(src.Wout.subarray(src.woutOffset(fromSlot), src.woutOffset(fromSlot) + action_n * N),
+            this.woutOffset(toSlot));
+        this.b.set(src.b.subarray(src.bOffset(fromSlot), src.bOffset(fromSlot) + N),
+            this.bOffset(toSlot));
+        // Private state is not inherited, exactly as in the same-arena path.
+        this.hPriv.fill(0, this.pOffset(toSlot), this.pOffset(toSlot) + private_n);
+        this.gain[toSlot] = src.gain[fromSlot];
+        return true;
+    }
+
     wOffset(slot) { return slot * this.N * this.N; }
     winOffset(slot) { return slot * this.N * this.sense_n; }
     woutOffset(slot) { return slot * this.action_n * this.N; }

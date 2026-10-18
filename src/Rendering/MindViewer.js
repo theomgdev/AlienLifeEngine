@@ -78,9 +78,15 @@ class MindViewer {
         ctx.fillStyle = '#6fe3c4';
         ctx.fillText(`${shared_n} shared`, 10, BAR_H + 22);
         ctx.fillStyle = '#8fa4bd';
-        ctx.fillText(`${private_n} private`, 10 + bar_w * shared_n + 4, BAR_H + 22);
+        // A brain only fills its private memory by thinking, and the organism on
+        // the editor bench never ticks. Flat bars there are correct, but silently
+        // flat reads as broken, so the panel says which it is.
+        const idle = info.private.every((v) => v === 0);
+        ctx.fillText(`${private_n} private${idle ? ' (idle)' : ''}`,
+            10 + bar_w * shared_n + 4, BAR_H + 22);
         ctx.fillStyle = '#68727f';
-        ctx.fillText(`gain ${gain.toFixed(2)}`, this.canvas.width - 58, BAR_H + 22);
+        ctx.fillText(`gain ${Number.isFinite(gain) ? gain.toFixed(2) : '--'}`,
+            this.canvas.width - 58, BAR_H + 22);
 
         // ---- weight matrix: the inherited, evolved part ----
         const cell = Math.max(1, Math.floor(matrix_px / N));
