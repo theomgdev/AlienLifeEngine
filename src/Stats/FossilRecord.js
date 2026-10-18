@@ -17,6 +17,16 @@ const FossilRecord = {
 
         this.record_size_limit = 500; // live chart window
         this.extinct_limit = 4000;    // how many dead lineages to remember
+        // The ancestry index is the only structure that grows with elapsed time
+        // rather than with what is alive, so it needs its own cap. Measured at
+        // ~104 new species per 1000 ticks and 123 bytes each, an uncapped index
+        // reaches ~12 MB at a million ticks and ~60 MB at five million — fine on
+        // a desktop, not fine on a phone, and invisible until the tab dies.
+        // 20000 entries is ~2.4 MB and still traces a very deep lineage.
+        this.ancestor_limit = 20000;
+        // Trimming walks every live chain, so it runs on a counter rather than
+        // on every birth. NaN here would disable it silently.
+        this._index_adds = 0;
         SpeciesNamer.reset();
         this.resetHistory();
     },
@@ -90,6 +100,68 @@ const FossilRecord = {
             start_tick: species.start_tick,
             end_tick: -1,
         };
+        if (++this._index_adds >= 2048) {
+            this._index_adds = 0;
+            this.trimAncestorIndex();
+        }
+    },
+
+    /**
+     * Bound the ancestry index without breaking the chains it exists to walk.
+     *
+     * This is the only structure that grows with elapsed time rather than with
+     * the living population, so a long run on a phone would eventually spend
+     * tens of megabytes on species nobody can name. Dropping the oldest ids
+     * would sever every lineage at its root, so instead the entries still
+     * REACHABLE from something that matters are kept: every extant species and
+     * every remembered fossil, walked back to its origin.
+     *
+     * Reachability alone is a FLOOR, not a ceiling. With thousands of fossils
+     * each retaining a chain, the reachable set measured ~11,800 entries on its
+     * own — a smaller cap simply could not be met. So when reachability leaves
+     * too much, the least significant fossils give up their chains too, poorest
+     * lineages first, which is the same ordering trimExtinct already uses.
+     */
+    trimAncestorIndex: function() {
+        const idx = this.ancestor_index;
+        if (!idx) return;
+        if (Object.keys(idx).length <= this.ancestor_limit) return;
+
+        const walk = (start_id, into, limit) => {
+            let id = start_id;
+            while (id != null && !into.has(id)) {
+                // A single chain can be over a thousand links deep, so the
+                // budget is checked inside the walk, not only before it. The
+                // outer check alone let one deep fossil overshoot the cap by
+                // its entire length.
+                if (limit !== undefined && into.size >= limit) return;
+                into.add(id);
+                const node = idx[id];
+                if (!node) break;
+                id = node.ancestor_id;
+            }
+        };
+
+        // Living species are never negotiable: their ancestry is what the
+        // lineage panel draws right now, so it is added with no limit.
+        const keep = new Set();
+        for (const s of Object.values(this.extant_species)) walk(s.id, keep);
+
+        // Fossils are added back richest-first until the budget runs out, so
+        // what survives a very long run is the lineages that actually mattered.
+        // The budget can never go below living ancestry, which is why it is the
+        // larger of the two.
+        const budget = Math.max(this.ancestor_limit, keep.size);
+        const fossils = Object.values(this.extinct_species)
+            .sort((a, b) => b.cumulative_pop - a.cumulative_pop);
+        for (const f of fossils) {
+            if (keep.size >= budget) break;
+            walk(f.id, keep, budget);
+        }
+
+        for (const id of Object.keys(idx)) {
+            if (!keep.has(Number(id)) && !keep.has(id)) delete idx[id];
+        }
     },
 
     changeSpeciesName: function(species, new_name) {
@@ -193,9 +265,13 @@ const FossilRecord = {
     },
 
     byId: function(id) {
+        // The index is the fast path and covers every species ever recorded, so
+        // it is consulted first. The two linear scans below only run for an id
+        // the index no longer holds: with thousands of fossils, searching them
+        // first made every lineage walk quadratic and froze a long run.
+        if (this.ancestor_index && this.ancestor_index[id]) return this.ancestor_index[id];
         for (const s of Object.values(this.extant_species)) if (s.id === id) return s;
         for (const s of Object.values(this.extinct_species)) if (s.id === id) return s;
-        if (this.ancestor_index && this.ancestor_index[id]) return this.ancestor_index[id];
         return null;
     },
 

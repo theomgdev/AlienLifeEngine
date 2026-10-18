@@ -139,13 +139,20 @@ const SpeciesNamer = {
      * code had neither: its numeral table stopped at X, so the 42nd clash
      * rendered as forty-two consecutive X's — the "Zanoth edax minor
      * XXXXXXXX...II" that showed up in play.
+     *
+     * The cycle numeral must NOT wrap. `cycle % ROMAN_LIMIT` looked like it kept
+     * names short, but it made the 144th clash of a genus reproduce the name of
+     * its 9th exactly ("borealis II" twice). Since extinct_species is keyed by
+     * name, a duplicate silently overwrote an older fossil and the record
+     * stopped growing — a long run quietly lost dynasties instead of keeping
+     * them. Beyond the words the suffix just counts, which is honest and rare.
      */
     _suffix(base, n) {
         if (n <= ROMAN_LIMIT) return this._roman(n);
         const i = n - ROMAN_LIMIT - 1;
         const word = SUBSPECIES[i % SUBSPECIES.length];
         const cycle = Math.floor(i / SUBSPECIES.length);
-        return cycle === 0 ? word : word + ' ' + this._roman((cycle % ROMAN_LIMIT) + 1);
+        return cycle === 0 ? word : word + ' ' + this._roman(cycle + 1);
     },
 
     _roman(n) {

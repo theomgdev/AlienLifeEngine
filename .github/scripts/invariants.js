@@ -257,6 +257,67 @@ check('MAX_EYES leaves room for valence + proximity pairs',
     check('eye facing survives fossilisation', !!eye && eye.direction !== undefined);
 }
 
+// --- names stay unique, and history stays bounded ------------------------
+// extinct_species and ancestor_index are keyed by name and id, so a namer that
+// repeats itself silently overwrites older fossils: the record stops growing
+// and dynasties vanish. The suffix used to wrap at 144 clashes per genus.
+{
+    const SpeciesNamer = r('src/Stats/SpeciesNamer');
+    SpeciesNamer.reset();
+    const seen = new Set();
+    for (let i = 1; i <= 2000; i++) seen.add(SpeciesNamer._unique('Velnak'));
+    check('species names never repeat within a genus', seen.size === 2000,
+        `${seen.size}/2000 unique`);
+    SpeciesNamer.reset();
+}
+
+// The ancestry index is the only structure that grows with elapsed time rather
+// than with the living population. Uncapped it reached ~12 MB per million ticks,
+// which is fine on a desktop and fatal on a phone. The trim must bound it
+// WITHOUT severing a lineage the UI is drawing.
+{
+    const FR = r('src/Stats/FossilRecord');
+    const saved_idx = FR.ancestor_index;
+    const saved_extant = FR.extant_species;
+    const saved_extinct = FR.extinct_species;
+    const saved_limit = FR.ancestor_limit;
+
+    FR.ancestor_index = Object.create(null);
+    FR.extant_species = {};
+    FR.extinct_species = {};
+    FR.ancestor_limit = 1000;
+
+    // a deep living chain plus a crowd of orphans nothing points at
+    for (let id = 1; id <= 3000; id++) {
+        FR.ancestor_index[id] = { id, name: 'S' + id, ancestor_id: id > 1 ? id - 1 : null,
+                                  generation: id, start_tick: 0, end_tick: -1 };
+    }
+    for (let id = 3001; id <= 9000; id++) {
+        FR.ancestor_index[id] = { id, name: 'O' + id, ancestor_id: null,
+                                  generation: 0, start_tick: 0, end_tick: -1 };
+    }
+    FR.extant_species['tip'] = { id: 3000, name: 'tip', ancestor_id: 2999 };
+
+    FR.trimAncestorIndex();
+
+    const kept = Object.keys(FR.ancestor_index).length;
+    check('the ancestry index drops unreachable entries', kept === 3000,
+        `kept ${kept}, expected the 3000-link living chain only`);
+
+    let broken = 0, id = FR.extant_species['tip'].ancestor_id;
+    while (id != null) {
+        const node = FR.ancestor_index[id];
+        if (!node) { broken++; break; }
+        id = node.ancestor_id;
+    }
+    check('the trim never severs a living lineage', broken === 0, `broken=${broken}`);
+
+    FR.ancestor_index = saved_idx;
+    FR.extant_species = saved_extant;
+    FR.extinct_species = saved_extinct;
+    FR.ancestor_limit = saved_limit;
+}
+
 console.log('');
 if (failures) {
     console.log(`${failures} invariant(s) failed`);
