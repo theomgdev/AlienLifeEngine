@@ -151,5 +151,30 @@ function clampFieldParams(radius, leak, tile_size) {
     return { radius: r.value, leak: lk.value, tile_size: t.value, adjusted };
 }
 
+/**
+ * Brain weight mutation strength implied by a body's mutation rate.
+ *
+ * With evolved mutation rates the body's rate is itself inherited and drifts, so
+ * tying the brain's sigma to it makes a lineage's physical and mental volatility
+ * one evolvable trait: a lineage whose body settles down shifts its mind into
+ * fine-tuning, while an unsettled one keeps searching broadly. That coupling is
+ * the point -- it only exists while the rate is a heritable trait, which is why
+ * the fixed-rate mode keeps its own independent dial.
+ *
+ * The slope puts the default rate of 15 at 0.24, three times the hand-set 0.08,
+ * so the same setting that makes sighted organisms appear also widens the search
+ * that diversifies them. Clamped to the same bounds as the manual control, so a
+ * lineage that evolves an extreme rate cannot push sigma out of range.
+ */
+const SIGMA_PER_MUTABILITY = 0.016;
+
+function brainSigmaFor(mutability) {
+    const m = Number(mutability);
+    if (!Number.isFinite(m) || m <= 0) return 0;
+    return Math.min(BRAIN_LIMITS.MUT_SIGMA_MAX,
+        Math.max(BRAIN_LIMITS.MUT_SIGMA_MIN, m * SIGMA_PER_MUTABILITY));
+}
+
 module.exports = { BRAIN_LIMITS, ACTION_N, ACTIONS, ACTION_NAMES, SENSE_N,
+                   SIGMA_PER_MUTABILITY, brainSigmaFor,
                    clampBrainShape, clampFieldParams, clampNum };

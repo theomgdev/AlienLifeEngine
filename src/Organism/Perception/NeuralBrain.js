@@ -30,7 +30,7 @@
 // Everything here is evolved. No gradients, no reward signal, no backprop.
 
 const Hyperparams = require('../../Hyperparameters');
-const { ACTIONS } = require('./BrainShape');
+const { ACTIONS, brainSigmaFor } = require('./BrainShape');
 
 // What think() tells the organism it wants. Returned instead of a bare boolean
 // because a brain can now ask for things that are not "I turned": standing still
@@ -132,9 +132,21 @@ class NeuralBrain {
         return this.arena.copyFrom(parentBrain.arena, parentBrain.slot, this.slot);
     }
 
+    /**
+     * Mutate the weights.
+     *
+     * With evolved rates the strength comes from this organism's own mutation
+     * rate, so the trait that governs how much its body changes governs its mind
+     * too. The child's rate is read, not the parent's: the rate drifts at birth
+     * before this runs, so a lineage stepping its rate down fine-tunes from that
+     * generation onward rather than one behind.
+     */
     mutate() {
         if (!this.arena || this.slot < 0) return;
-        this.arena.mutate(this.slot, RNG, Hyperparams.brainMutationSigma);
+        const sigma = Hyperparams.useGlobalMutability
+            ? Hyperparams.brainMutationSigma
+            : brainSigmaFor(this.owner ? this.owner.mutability : 0);
+        this.arena.mutate(this.slot, RNG, sigma);
     }
 
     /**

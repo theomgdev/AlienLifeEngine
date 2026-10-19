@@ -68,6 +68,8 @@ class ControlPanel {
                     this.engine.organism_editor.renderFull();
                 }
                 this.editor_controller.refreshDetailsPanel();
+            } else if (curTab === 'hyperparameters') {
+                if (this.hive_controls) this.hive_controls.syncBrainMutationMode();
             }
         });
         $('#open-studio-btn').click ( () => {
@@ -205,6 +207,12 @@ class ControlPanel {
                 }
                 self.editor_controller.refreshDetailsPanel();
             }
+            else if (this.id === 'hyperparameters') {
+                // The derived-sigma note quotes the live average mutation rate,
+                // which drifts as lineages evolve, so it is recomputed on open
+                // rather than left at whatever it said when the panel was built.
+                if (self.hive_controls) self.hive_controls.syncBrainMutationMode();
+            }
             self.tab_id = this.id;
         });
     }
@@ -301,6 +309,7 @@ class ControlPanel {
     }
 
     defineHyperparameterControls() {
+        const panel = this;
         $('#food-prod-prob').change(function() {
             Hyperparams.foodProdProb = $('#food-prod-prob').val();
         }.bind(this));
@@ -340,6 +349,7 @@ class ControlPanel {
                 $('#avg-mut').css('display', 'none');
             }
             Hyperparams.useGlobalMutability = !this.checked;
+            if (panel.hive_controls) panel.hive_controls.syncBrainMutationMode();
         });
         $('#global-mutation').change( function() {
             Hyperparams.globalMutability = parseInt($('#global-mutation').val());

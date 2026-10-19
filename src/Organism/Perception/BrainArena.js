@@ -118,8 +118,9 @@ class BrainArena {
             this.woutOffset(toSlot));
         this.b.set(src.b.subarray(src.bOffset(fromSlot), src.bOffset(fromSlot) + N),
             this.bOffset(toSlot));
-        // Private state is not inherited, exactly as in the same-arena path.
-        this.hPriv.fill(0, this.pOffset(toSlot), this.pOffset(toSlot) + private_n);
+        // Private state crosses with the weights, exactly as in the same-arena path.
+        this.hPriv.set(src.hPriv.subarray(src.pOffset(fromSlot), src.pOffset(fromSlot) + private_n),
+            this.pOffset(toSlot));
         this.gain[toSlot] = src.gain[fromSlot];
         return true;
     }
@@ -175,9 +176,16 @@ class BrainArena {
         this.Win.copyWithin(tI, fI, fI + N * sense_n);
         this.Wout.copyWithin(tO, fO, fO + action_n * N);
         this.b.copyWithin(tB, fB, fB + N);
-        // private state is NOT inherited — a newborn starts with a blank mind,
-        // only the *structure* (weights) is passed on. Lamarckism stays out.
-        this.hPriv.fill(0, this.pOffset(toSlot), this.pOffset(toSlot) + private_n);
+        // The child also starts life holding the parent's private state, so a
+        // newborn wakes mid-thought instead of from zero. This is a parental
+        // effect, not Lamarckism: nothing an organism experiences is written
+        // back into W, Win, Wout or b, so selection still only ever sees the
+        // inherited genome. What crosses is the initial condition of a
+        // recurrent system -- the same quantity the collective field already
+        // shares between neighbours, passed along the generational axis
+        // instead of the spatial one.
+        this.hPriv.copyWithin(this.pOffset(toSlot), this.pOffset(fromSlot),
+            this.pOffset(fromSlot) + private_n);
         this.gain[toSlot] = this.gain[fromSlot];
     }
 

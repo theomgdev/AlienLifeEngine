@@ -7,7 +7,8 @@
 
 const WorldConfig = require("../WorldConfig");
 const Hyperparams = require("../Hyperparameters");
-const { BRAIN_LIMITS, clampBrainShape, clampFieldParams, clampNum } = require('../Organism/Perception/BrainShape');
+const { BRAIN_LIMITS, SIGMA_PER_MUTABILITY, brainSigmaFor,
+        clampBrainShape, clampFieldParams, clampNum } = require('../Organism/Perception/BrainShape');
 
 
 class HiveControls {
@@ -218,6 +219,29 @@ class HiveControls {
         return shape;
     }
 
+    /**
+     * Reflect which mode owns the brain's mutation strength.
+     *
+     * Under evolved rates the value is derived per organism from its own
+     * inherited rate, so a typed number here would be read by nothing. Disabling
+     * the input says that, and the note gives the figure the current average
+     * actually implies -- the dial is not gone, it moved to the Genetics card.
+     */
+    syncBrainMutationMode() {
+        const evolved = !Hyperparams.useGlobalMutability;
+        $('#brain-mutation').prop('disabled', evolved);
+        if (!evolved) {
+            $('#brain-mutation-note').text('');
+            return;
+        }
+        const avg = this.env && this.env.averageMutability ? this.env.averageMutability() : 0;
+        const live = avg > 0 ? avg : Hyperparams.globalMutability;
+        $('#brain-mutation-note').text(
+            `Scaled from each organism's own mutation rate`
+            + ` (${SIGMA_PER_MUTABILITY} per point).`
+            + ` A rate of ${Math.round(live * 100) / 100} gives ${brainSigmaFor(live).toFixed(3)}.`);
+    }
+
     /** Rebuild arena + field and restart life, since brain shape changed. */
     rebuildHive() {
         return this.applyShape(Hyperparams.brainN, Hyperparams.brainSharedFrac);
@@ -232,6 +256,7 @@ class HiveControls {
         $('#collective-leak').val(Hyperparams.collectiveLeak);
         $('#brain-mutation').val(Hyperparams.brainMutationSigma);
         $('#random-start').prop('checked', Hyperparams.randomStart);
+        this.syncBrainMutationMode();
         if (arena) {
             $('#brain-shape-readout').text(
                 `${arena.N} channels: ${arena.shared_n} collective / ${arena.private_n} private`
