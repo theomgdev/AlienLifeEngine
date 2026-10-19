@@ -213,10 +213,9 @@ const FossilRecord = {
         species.ancestor = undefined;
         delete this.extant_species[species.name];
         if (species.cumulative_pop >= this.min_discard) {
-            // The upstream engine left a `// TODO: store as extinct species` here,
-            // so numExtinctSpecies() was permanently 0 and every dead lineage
-            // vanished. Keeping a lightweight record instead: no anatomy object,
-            // just the facts needed to draw a phylogeny and tell its story.
+            // A lightweight record, not the species object: no anatomy, just the
+            // facts needed to draw a phylogeny and tell its story. Without it
+            // numExtinctSpecies() is permanently 0 and every dead lineage vanishes.
             this.extinct_species[species.name] = {
                 id: species.id,
                 name: species.name,

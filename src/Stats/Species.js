@@ -13,11 +13,11 @@ let next_species_id = 1;
 class Species {
     constructor(anatomy, ancestor, start_tick) {
         this.anatomy = anatomy;
-        // Phylogeny is kept as an ID, not an object reference. The upstream engine
-        // held the ancestor Species itself and then had to null it out on extinction
-        // ("garbage collect ancestors"), which severed the tree after 2-3 generations
-        // and made the whole 400k-tick history unreadable. An id is 4 bytes and
-        // survives the ancestor's death, so the full tree is now recoverable.
+        // Phylogeny is kept as an ID, not an object reference. Holding the ancestor
+        // Species itself forces nulling it out on extinction, which severs the tree
+        // after 2-3 generations and makes a 400k-tick history unreadable. An id is
+        // 4 bytes and survives the ancestor's death, so the full tree stays
+        // recoverable.
         this.id = next_species_id++;
         this.ancestor_id = ancestor ? ancestor.id : null;
         this.generation = ancestor ? (ancestor.generation || 0) + 1 : 0;

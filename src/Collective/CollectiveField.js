@@ -3,9 +3,9 @@
 // THE CORE IDEA OF AlienLifeEngine
 // ---------------------------------
 // Every sighted organism carries an NxN recurrent brain whose state
-// vector h is split: the first `shared_n` channels (25% by default) are NOT private.
+// vector h is split: the first `shared_n` channels (half by default) are NOT private.
 // They are read from, and written back into, a coarse spatial field laid over the
-// world grid. So a quarter of every mind lives outside the body, in a substrate that
+// world grid. So half of every mind lives outside the body, in a substrate that
 // its neighbours also think with.
 //
 // Crucially the WEIGHTS are not shared, only the STATE. Each organism interprets the

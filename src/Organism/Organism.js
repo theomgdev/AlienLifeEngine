@@ -85,8 +85,8 @@ class Organism {
         } 
         var mutated = false;
         if (RNG.random() * 100 <= prob) {
-            // Brain and body mutate together on every mutation event: the mind is
-            // always under selection, not on a 10% side-branch as it was upstream.
+            // Brain and body mutate together on every mutation event, so the mind
+            // is always under selection rather than on a rare side-branch.
             org.brain.mutate();
             if (org.anatomy.is_mover && RNG.random() * 100 <= 10) {
                 org.move_range += Math.floor(RNG.random() * 4) - 2;

@@ -1,10 +1,10 @@
 {
   "name": "alienlifeengine",
   "version": "0.1.0",
-  "description": "An evolution simulator where every sighted organism thinks with an evolved recurrent brain and shares a quarter of its mind with a local collective field.",
+  "description": "An evolution simulator where every sighted organism thinks with an evolved recurrent brain and shares half of its mind with a local collective field.",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run build && node .github/scripts/invariants.js",
     "build": "webpack --mode=production",
     "build-dev": "webpack --mode=development",
     "build-watch": "webpack --watch --mode=development",
@@ -33,9 +33,6 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "glob-parent": "^6.0.2",
-    "jquery": "^3.6.1",
-    "npm": "^10.2.1",
-    "watchpack": "^2.4.0"
+    "jquery": "^3.6.1"
   }
 }

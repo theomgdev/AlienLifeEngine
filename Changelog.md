@@ -1,115 +1,59 @@
 # Changelog
 
-## 1.0.6 (ongoing)
+Versions before 0.1.0 belong to [The Life Engine](https://github.com/MaxRobinsonTheGreat/LifeEngine),
+which this engine forked from and whose changelog lives in that repository.
 
-### UI Enhancements:
-- Added ability to change species name via UI
+## 0.1.0 (unreleased)
 
-### Simulation Enhancements:
-- 
+The fork, and everything that made it a different engine.
 
-## 1.0.5 (4/23/2023)
+### The brain
 
-### UI Enhancements:
-- Improved "Community Creations" list panel
-- Added Mod list to Community Creations
-- Added brush size slider
-- Added unnatural organism warning
+- Every sighted organism carries an NxN Elman recurrent network with separate
+  input and readout matrices, inherited and mutated, never trained
+- RMSNorm every timestep with an inheritable gain, so unbounded weight mutation
+  cannot saturate the network into a constant
+- Half of each state vector is shared through a spatial CollectiveField, so
+  nearby minds share state while keeping private weights
+- A twelfth sensory channel carries white noise, making exploration an evolvable
+  trait rather than an engine exception
+- Brain geometry validated in one gate (`clampBrainShape`), with a live readout
+  of the resolved shape
 
-### Simulation Enhancements:
-- Added links to community mods
-- Added more worlds and organisms to community creations
+### The body
 
-## 1.0.4 (9/17/2022)
+- The mover cell is gone: movement comes from having an eye, so mobility and
+  thought cannot evolve apart
+- Halt, reverse and two body turns added to the action space; turning costs the
+  tick, which puts eye orientation under selection
+- Movement is fully deterministic — no stuck-fallback, no random jolt. Birth
+  orientation stays random, because for a rooted producer it is the only spatial
+  exploration there is
+- Self-occluded eyes report a mild percept instead of silence
 
-### UI Enhancements:
-- Added "Community Creations" button
-- Updated icons
-- Standardized Colors
+### History and identity
 
-### Simulation Enhancements:
-- Added ability to load premade organisms and worlds from backend
-- Added SeeThroughSelf param that allows eyes to see through their own cells
+- Seeded PRNG throughout, so a world can be replayed
+- Species carry pronounceable taxonomic names generated from their anatomy
+  rather than base-36 hashes
+- Phylogeny keyed by id, bounded by reachability, so lineage chains survive
+  their ancestors' extinction
+- The Chronicle narrates the world as it runs; extinct species are recorded
+  rather than dropped
+- MindViewer renders a live organism's mind in the editor
 
-### Bug Fixes:
-- Mutation rate now properly saves and loads with world
+### Interface
 
+- Glassmorphic HUD, floating dock and responsive studio drawer, built for large
+  screens and usable on a phone
+- Control labels name what a setting does to the world, not the variable behind
+  it
+- Community panel carries lineage, project links and similar projects
 
-## 1.0.3 (4/15/2022)
+### Defaults, tuned from play
 
-### UI Enhancements:
-- Improved styling
-
-### Simulation Enhancements:
-- Added ability to save/load organisms
-- Added ability to save/load worlds
-
-### Bug Fixes:
-- charste changed to charset
-- Fixed species tracking
-
-
-Thanks to contributors: @TerraMaster85
-
-## 1.0.2 (12/21/2021)
-
-### UI Enhancements:
-- New tab "World Controls"
-    - Relocated grid controls and auto reset to this tab
-    - Button to generate random walls with perlin noise
-    - Button to reset the environment with many randomly generated organisms
-    - Option to not clear walls on reset
-    - Option to pause on total extinction
-- "Simulation controls" tab renamed to "Evolution Controls"
-- Button to save/load Evolution Controls in a `.json` file
-- Button to randomize the organism in the editor window
-- Can now use drag view tool while rendering is off
-- Reorganized "About" tab and left panel, embedded explanation video
-
-### Simulation Enhancements:
-- New evolution control `Extra Mover Reproduction Cost`, which adds additional food cost for movers to reproduce
-- Combined `Movers can rotate` and `Offspring rotate` evolution controls into `Rotation enabled`
-- Fully max out simulation speed when slider is all the way to the right
-
-### Bug Fixes:
-- Armor is no longer ignored when checking for clear reproduction space
-- Chart data is now properly loaded/discarded when paused
-
-
-Thanks to contributors: @Chrispykins @M4YX0R
-
-## 1.0.1 (12/4/2021)
-
-### UI Enhancements:
-- Hotkeys/improved zoom controls: [#47](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/47)
-  - `A` reset view
-  - `S/middle mouse button` pan
-  - `D` drop walls
-  - `F` drop food
-  - `G` click to kill
-  - `H` headless rendering toggle
-  - `Spacebar/J` pause/play toggle
-  - `Z` select organism
-  - `X` edit organism
-  - `C` drop organism
-  - `V` toggle hud
-  - `B` destroy all walls
-  - `Q` min/max control panel
-- Improved mutation probability controls: [#43](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/43)
-- Ability to edit individual organism's mutability: [#46](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/46)
-- Added clear button and improved reset warnings: [#64](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/64)
-- Control Panel is minimized by default: [#64](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/64)
-
-### Simulation Enhancements:
-- Default food prodcution probability increased from 4->5
-
-### Bug Fixes:
-- Fixed actual FPS display: [#45](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/45)
-- Fixed slow down/crash on very long runs: [#63](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/63)
-- Spelling Fix: [#31](https://github.com/MaxRobinsonTheGreat/LifeEngine/pull/31)
-
-
-Thanks to contributors: @TrevorSayre @EvaisaGiac @Chrispykins
-
-## 1.0.0
-Initial release.
+- Founder mutability and the global fixed rate at 15%
+- No sight subsidy, no free food drop: the food chain runs through producers
+- Collective share at 0.5, where a herd signal emerges over autonomous movement
+- Worlds start from a single static ancestor; the diverse random crowd is an
+  option

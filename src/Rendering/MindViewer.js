@@ -1,10 +1,9 @@
 // MindViewer — draws a selected organism's actual mind, live.
 //
-// Clicking a creature used to report "Move Towards: food" from a lookup table
-// that no longer exists. What matters now is the state vector: which channels are
-// its own memory, which quarter it shares with everything nearby, and how hard
-// the whole thing is currently firing. That is the feature of this engine, so it
-// should be visible on any creature you point at.
+// What matters is the state vector: which channels are its own memory, which
+// share it has in common with everything nearby, and how hard the whole thing is
+// currently firing. That is the feature of this engine, so it should be visible
+// on any creature you point at.
 //
 // Rendered as a tiny canvas rather than DOM nodes: N can be 48, so that is up to
 // 48 bars plus an NxN weight matrix, redrawn a few times a second.

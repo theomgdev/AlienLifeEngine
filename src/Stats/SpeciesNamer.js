@@ -1,11 +1,10 @@
 // SpeciesNamer — pronounceable names derived from an organism's body.
 //
-// The upstream engine named species with RNG.random().toString(36), producing
-// labels like "30jtxbo5b4". Nobody follows the fate of a hash: you cannot say "the
-// Velnak line survived the famine" about a base-36 string, so 400,000 ticks of
-// history read as noise. Names here are generated from the anatomy itself, so a
-// name carries information (what the creature is built from) and reads like a
-// taxon, which is what makes a lineage feel worth watching.
+// Names are generated from the anatomy itself rather than from randomness. Nobody
+// follows the fate of a hash: you cannot say "the Velnak line survived the famine"
+// about a base-36 string like "30jtxbo5b4", so 400,000 ticks of history read as
+// noise. A derived name carries information (what the creature is built from) and
+// reads like a taxon, which is what makes a lineage feel worth watching.
 //
 // Form: Genus [epithet] — "Velnak", "Ocuthra minor", "Pyrrha fodiens".
 // The genus comes from the body's dominant cells, so related bodies get related

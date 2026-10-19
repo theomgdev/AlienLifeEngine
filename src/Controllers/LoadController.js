@@ -1,7 +1,8 @@
-// The upstream project shipped curated worlds, organisms and mod links in this
-// panel. This engine does not carry those: its world files and brains are a
-// different format and there is no mod loader. What a visitor needs instead is
-// where the project lives, who it came from, and what else is worth playing.
+// This panel carries lineage, project links and similar projects rather than a
+// library of loadable content: world files and brains here are a different
+// format from anything shared elsewhere, and there is no mod loader. What a
+// visitor needs is where the project lives, who it came from, and what else is
+// worth playing.
 const LoadController = {
     init() {
         $('#close-load-btn').click(() => {
