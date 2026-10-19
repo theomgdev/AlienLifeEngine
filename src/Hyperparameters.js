@@ -9,7 +9,7 @@ const Hyperparams = {
         this.growableNeighbors = Neighbors.adjacent;
 
         this.useGlobalMutability = false;
-        this.globalMutability = 10;
+        this.globalMutability = 15;
         this.addProb = 33;
         this.changeProb = 33;
         this.removeProb = 33;
@@ -67,16 +67,13 @@ const Hyperparams = {
         this.collectiveTileSize = 6;   // storage resolution (grid cells per tile)
         this.collectiveRadius = 20;    // influence disc radius in grid cells
         this.collectiveLeak = 0.85;    // field memory; higher = slower-moving culture
-        // The original ancestor is mouth + 2 producers: static, no brain. Measured:
-        // a mover+eye ancestor DIES before its first birth (it collected 5 food of
-        // the 5 needed when it starved), because movers cannot produce food unless
-        // moversCanProduce is on, and even then the extra cells raise foodNeeded
-        // faster than a wandering body can feed itself. See
-        // Research/harness/harness_faz0/ancestor_diagnosis.js
-        // Instead the world starts as a random CROWD scaled to its area, which seeds
-        // many independent lineages at once — some static producers feeding the
-        // ecosystem, some already mobile and sighted, thinking from tick one.
-        this.randomStart = true;
+        // Life starts from the classic single ancestor: mouth + 2 producers, static
+        // and blind. Observed in play on a large world: movement and eyes evolve out
+        // of that one lineage on their own, and watching a mind appear from nothing
+        // is the more interesting origin. The diverse random crowd — many independent
+        // lineages, some already sighted and thinking from tick one — is available as
+        // an option for worlds that should start with culture already running.
+        this.randomStart = false;
         this.maxStartPopulation = 20000;
     },
 

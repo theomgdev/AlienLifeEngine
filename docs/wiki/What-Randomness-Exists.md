@@ -19,7 +19,9 @@ drifts up or down, and every per-weight perturbation of the brain.
 is the one place a creature can get randomness *into its decisions*, and only if
 evolution wires `Win` to that channel. It is an opportunity, not an imposition.
 
-**World generation.** Founder placement and founder bodies.
+**World generation.** Founder placement and founder bodies, when a world starts
+with the diverse random crowd. The default single ancestor is deterministic: a
+fixed body at the centre of the grid.
 
 ## Where no dice are rolled
 

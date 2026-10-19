@@ -27,12 +27,12 @@ colonies or dies.
 | Setting | Default | What it does |
 |---|---|---|
 | `useGlobalMutability` | false | Use one fixed rate for everyone instead of inherited rates |
-| `globalMutability` | 10 | That fixed rate, in percent |
+| `globalMutability` | 15 | That fixed rate, in percent |
 | `addProb` / `changeProb` / `removeProb` | 33 / 33 / 33 | Relative weights for growing, changing and losing a cell |
 | `rotationEnabled` | true | Bodies may rotate. Off: orientation is fixed for life and the turn actions always fail |
 
 With `useGlobalMutability` off — the default — every organism carries its own
-mutability, starting at 10% for founders and drifting ±1 on each birth with a
+mutability, starting at 15% for founders and drifting ±1 on each birth with a
 floor of 1. Lineages evolve how fast they evolve.
 
 ## Perception
@@ -63,3 +63,15 @@ press into it. Lowering it lets the escape actions win more easily.
 | `collectiveTileSize` | 6 | Storage resolution, grid cells per tile |
 | `collectiveRadius` | 20 | Influence disc radius in grid cells |
 | `collectiveLeak` | 0.85 | Field memory; higher means slower-moving culture |
+
+## World start
+
+| Setting | Default | What it does |
+|---|---|---|
+| `randomStart` | false | Seed the world with a diverse random crowd instead of one ancestor |
+| `maxStartPopulation` | 20000 | Cap on founders when the crowd is used |
+
+Off, a world begins as the classic single static ancestor — mouth plus two
+producers — and has to evolve movement and sight for itself. On, it begins with
+roughly one founder per 100 grid cells, some of them already sighted and
+thinking, so regional cultures form immediately.

@@ -137,17 +137,16 @@ class WorldEnvironment extends Environment{
     /**
      * Seed a fresh world.
      *
-     * The upstream engine started from a single static plant, which meant the hive
-     * mind — the whole point of AlienLifeEngine — only appeared if evolution happened
-     * to stumble onto mover AND eye in the same lineage, and often never did. So
-     * life now starts as a crowd scaled to the world: a 100x100 grid gets ~100
-     * organisms, 10x the area gets 10x the founders. More founders means more
-     * independent lineages, which means regional cultures form immediately.
+     * By default a single static plant, which evolves movement and sight on its own
+     * at the default mutation rate.
      *
-     * A thinking ancestor on its own does NOT work: measured, a mover+eye founder
-     * starves before its first birth (5 food collected of the 5 needed), because
-     * movers cannot produce food. A random crowd works because some founders are
-     * static producers that feed the ecosystem while the mobile ones hunt.
+     * With randomStart the world is instead seeded with a crowd scaled to its area:
+     * a 100x100 grid gets ~100 organisms, 10x the area gets 10x the founders. More
+     * founders means more independent lineages, so regional cultures form
+     * immediately. The crowd is random rather than a thinking ancestor because a
+     * lone mover+eye founder starves before its first birth (measured: 5 food
+     * collected of the 5 needed) — movers cannot produce food, while a crowd
+     * contains static producers that feed the ecosystem for the mobile ones.
      * See Research/harness/harness_faz0/ancestor_diagnosis.js
      */
     OriginOfLife() {

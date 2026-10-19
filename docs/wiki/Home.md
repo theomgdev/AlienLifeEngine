@@ -23,10 +23,12 @@ are inherited, mutated, and kept or lost depending on whether their owner ate.
 
 ## Where to start if you just opened it
 
-Worlds begin with a crowd rather than one ancestor: roughly one founder per 100
-grid cells, all of them with a 10% mutation rate and random birth directions.
-A normal world usually establishes; very small worlds can still go extinct early
-if producers fill their own reproduction space before mobile grazers emerge.
+Worlds begin as a single static ancestor — mouth plus two producers — with a 15%
+mutation rate, and have to evolve movement and sight for themselves. A large
+world normally manages it; very small worlds can go extinct early if producers
+fill their own reproduction space before mobile grazers emerge. Switching on
+"Start World with Diverse Random Crowd" instead seeds roughly one founder per
+100 grid cells, some already sighted and thinking from tick one.
 
 Press **V** to see the collective field. That nebula is thought, and it moves
 like a circulatory system once a population is large enough to sustain it.

@@ -69,9 +69,10 @@ tab writes it down as it happens, names the lineages (*Velnak edax*, not
 - Serve the `dist` directory and open it in a browser:
   `python -m http.server --directory dist`
 
-Worlds start as a crowd scaled to their area rather than a single ancestor:
-roughly one founder per 100 grid cells, so many independent lineages exist from
-tick one.
+Worlds start from a single static ancestor and evolve movement and sight for
+themselves; on a large world that is what happens in play. "Start World with
+Diverse Random Crowd" instead seeds roughly one founder per 100 grid cells, so
+many independent lineages exist from tick one.
 
 ## How the world works
 
