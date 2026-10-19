@@ -19,6 +19,34 @@ const { clampBrainShape, BRAIN_LIMITS, ACTION_N } = r('src/Organism/Perception/B
 const RNG = r('src/Utils/RNG');
 
 let failures = 0;
+
+/**
+ * A grid stand-in with the same surface the engine queries.
+ *
+ * The checks below drive organisms directly rather than building a whole world,
+ * so they need something answering grid questions. It mirrors GridMap: cellAt
+ * for the objects, stateIdAt for the typed state lookup the hot paths use, and
+ * both must agree or a check would pass against a grid the engine never sees.
+ */
+function makeGridStub(cols, rows, extra = {}) {
+    const cells = [];
+    for (let c = 0; c < cols; c++) {
+        cells[c] = [];
+        for (let rr = 0; rr < rows; rr++) cells[c][rr] = { state: CellStates.empty, owner: null, cell_owner: null, c, r: rr };
+    }
+    const inBounds = (c, rr) => c >= 0 && rr >= 0 && c < cols && rr < rows;
+    const at = (c, rr) => (inBounds(c, rr) ? cells[c][rr] : null);
+    const grid_map = {
+        cols, rows, cellAt: at,
+        stateIdAt: (c, rr) => (inBounds(c, rr) ? cells[c][rr].state.id : -1),
+        ...extra,
+    };
+    const changeCell = (c, rr, s, o) => {
+        const x = at(c, rr);
+        if (x) { x.state = s; x.cell_owner = o; x.owner = o ? o.org : null; }
+    };
+    return { cells, at, grid_map, changeCell };
+}
 function check(name, condition, detail) {
     const ok = !!condition;
     if (!ok) failures++;
@@ -95,15 +123,10 @@ check('MAX_EYES leaves room for valence + proximity pairs',
 // A random fallback here destroys that selection pressure, so CI refuses one.
 {
     const cols = 60, rows = 60;
-    const cells = [];
-    for (let c = 0; c < cols; c++) {
-        cells[c] = [];
-        for (let rr = 0; rr < rows; rr++) cells[c][rr] = { state: CellStates.empty, owner: null, cell_owner: null, c, r: rr };
-    }
-    const at = (c, rr) => (c >= 0 && rr >= 0 && c < cols && rr < rows) ? cells[c][rr] : null;
+    const { at, grid_map, changeCell } = makeGridStub(cols, rows);
     const env = {
-        grid_map: { cols, rows, cellAt: at },
-        changeCell: (c, rr, s, o) => { const x = at(c, rr); if (x) { x.state = s; x.cell_owner = o; x.owner = o ? o.org : null; } },
+        grid_map,
+        changeCell,
         total_ticks: 0,
         collective_field: null,
         organisms: [],
@@ -182,15 +205,10 @@ check('MAX_EYES leaves room for valence + proximity pairs',
     const before = Hyperparams.rotationEnabled;
     Hyperparams.rotationEnabled = false;
     const cols = 20, rows = 20;
-    const cells = [];
-    for (let c = 0; c < cols; c++) {
-        cells[c] = [];
-        for (let rr = 0; rr < rows; rr++) cells[c][rr] = { state: CellStates.empty, owner: null, cell_owner: null, c, r: rr };
-    }
-    const at = (c, rr) => (c >= 0 && rr >= 0 && c < cols && rr < rows) ? cells[c][rr] : null;
+    const { at, grid_map, changeCell } = makeGridStub(cols, rows);
     const env = {
-        grid_map: { cols, rows, cellAt: at },
-        changeCell: (c, rr, s, o) => { const x = at(c, rr); if (x) { x.state = s; x.cell_owner = o; x.owner = o ? o.org : null; } },
+        grid_map,
+        changeCell,
         total_ticks: 0, collective_field: null, organisms: [], addOrganism() {},
     };
     env.brain_arena = new BrainArena(4, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
@@ -214,15 +232,10 @@ check('MAX_EYES leaves room for valence + proximity pairs',
     const FossilRecord = r('src/Stats/FossilRecord');
 
     const cols = 30, rows = 30;
-    const cells = [];
-    for (let c = 0; c < cols; c++) {
-        cells[c] = [];
-        for (let rr = 0; rr < rows; rr++) cells[c][rr] = { state: CellStates.empty, owner: null, cell_owner: null, c, r: rr };
-    }
-    const at = (c, rr) => (c >= 0 && rr >= 0 && c < cols && rr < rows) ? cells[c][rr] : null;
+    const { at, grid_map, changeCell } = makeGridStub(cols, rows, { getCenter: () => [15, 15] });
     const env = {
-        grid_map: { cols, rows, cellAt: at, getCenter: () => [15, 15] },
-        changeCell: (c, rr, s, o) => { const x = at(c, rr); if (x) { x.state = s; x.cell_owner = o; x.owner = o ? o.org : null; } },
+        grid_map,
+        changeCell,
         total_ticks: 100, collective_field: null, organisms: [], addOrganism() {},
         averageMutability: () => 10,
     };

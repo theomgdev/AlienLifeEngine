@@ -9,22 +9,21 @@ class MouthCell extends BodyCell{
 
     performFunction() {
         var env = this.org.env;
+        var grid = env.grid_map;
         var real_c = this.getRealCol();
         var real_r = this.getRealRow();
+        // Asked through the grid's state mirror: a mouth checks eight squares
+        // every tick and almost all of them hold nothing edible, so the common
+        // answer costs one typed-array read and never touches a cell object.
+        var food_id = CellStates.food.id;
         for (var loc of Hyperparams.edibleNeighbors){
-            var cell = env.grid_map.cellAt(real_c+loc[0], real_r+loc[1]);
-            this.eatNeighbor(cell, env);
-        }
-    }
-
-    eatNeighbor(n_cell, env) {
-        if (n_cell == null)
-            return;
-        if (n_cell.state == CellStates.food){
-            env.changeCell(n_cell.col, n_cell.row, CellStates.empty, null);
+            var c = real_c + loc[0], r = real_r + loc[1];
+            if (grid.stateIdAt(c, r) !== food_id) continue;
+            env.changeCell(c, r, CellStates.empty, null);
             this.org.food_collected++;
         }
     }
+
 }
 
 module.exports = MouthCell;

@@ -11,14 +11,24 @@ class GridMap {
         this.cols = cols;
         this.rows = rows;
         this.cell_size = cell_size;
+        // Parallel state mirror, row-major. Reading what occupies a square is by
+        // far the most frequent question the engine asks, and answering it from
+        // the cell object means two pointer hops into millions of objects, which
+        // gets steadily worse as the world grows. Every write goes through
+        // setCellType/changeState so this cannot drift; Research/harness/perf/
+        // grid_mirror_check.js asserts it against the objects.
+        this.state_ids = new Uint8Array(cols * rows);
         for(var c=0; c<cols; c++) {
             var row = [];
             for(var r=0; r<rows; r++) {
                 var cell = new Cell(CellStates.empty, c, r, c*cell_size, r*cell_size);
+                cell.grid = this;
+                cell.index = r * cols + c;
                 row.push(cell);
             }            
             this.grid.push(row);
         }
+        this.state_ids.fill(CellStates.empty.id);
     }
 
     fillGrid(state, ignore_walls=false) {
@@ -37,6 +47,18 @@ class GridMap {
             return null;
         }
         return this.grid[col][row];
+    }
+
+    /**
+     * What occupies (col, row), as a state id, or -1 off the grid.
+     *
+     * The answer for callers that only need to know the type: one typed-array
+     * read, no object touched. Compare ids, or CellStates.by_id[id] for the
+     * state itself.
+     */
+    stateIdAt(col, row) {
+        if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) return -1;
+        return this.state_ids[row * this.cols + col];
     }
 
     setCellType(col, row, state) {

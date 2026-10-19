@@ -68,23 +68,39 @@ class EyeCell extends BodyCell{
         var start_row = this.getRealRow();
         var col = start_col;
         var row = start_row;
-        var cell = null;
+        var grid = env.grid_map;
+        var empty_id = CellStates.empty.id;
+        var see_through_self = Hyperparams.seeThroughSelf;
+        // The square the ray is standing on when it stops, or null if it walked
+        // off the grid. An eye whose sightline runs out of world reports nothing
+        // rather than reporting the last open square, which SensoryVector reads
+        // as silence -- the same percept as before the mirror existed.
+        var last_cell = null;
         for (var i=0; i<Hyperparams.lookRange; i++){
             col+=addCol;
             row+=addRow;
-            cell = env.grid_map.cellAt(col, row);
-            if (cell == null) {
+            // The ray walks the state mirror and only reaches for the cell object
+            // once something is actually in the way. A sightline is mostly open
+            // ground, so this is the difference between one typed-array read per
+            // step and a pointer chase per step.
+            var id = grid.stateIdAt(col, row);
+            if (id < 0) {
+                last_cell = null;
                 break;
             }
-            if (cell.owner === this.org && Hyperparams.seeThroughSelf) {
+            if (id === empty_id) {
+                last_cell = grid.cellAt(col, row);
                 continue;
             }
-            if (cell.state !== CellStates.empty) {
-                var distance = Math.abs(start_col-col) + Math.abs(start_row-row);
-                return new Observation(cell, distance, direction);
+            var cell = grid.cellAt(col, row);
+            if (cell.owner === this.org && see_through_self) {
+                last_cell = cell;
+                continue;
             }
+            var distance = Math.abs(start_col-col) + Math.abs(start_row-row);
+            return new Observation(cell, distance, direction);
         }
-        return new Observation(cell, Hyperparams.lookRange, direction);
+        return new Observation(last_cell, Hyperparams.lookRange, direction);
     }
 }
 

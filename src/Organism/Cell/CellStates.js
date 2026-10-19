@@ -79,6 +79,18 @@ const CellStates = {
     killer: new Killer(),
     armor: new Armor(),
     eye: new Eye(),
+    /**
+     * Give every state a small integer and an id-indexed table.
+     *
+     * The grid keeps a parallel Uint8Array of these ids so a hot query can ask
+     * what occupies a square without dereferencing the GridCell behind it. On a
+     * 1600x1600 world that is one typed-array read instead of two pointer hops
+     * through 2.56M objects, and the engine makes ~35k such queries per tick.
+     */
+    defineIds() {
+        this.by_id = this.all;
+        for (let i = 0; i < this.all.length; i++) this.all[i].id = i;
+    },
     defineLists() {
         // There is no mover cell: mobility comes from the eye (see
         // Anatomy.checkTypeChange), so everything that moves also sees and thinks.
@@ -94,5 +106,6 @@ const CellStates = {
 }
 
 CellStates.defineLists();
+CellStates.defineIds();
 
 module.exports = CellStates;

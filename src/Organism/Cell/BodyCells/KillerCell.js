@@ -9,11 +9,18 @@ class KillerCell extends BodyCell{
 
     performFunction() {
         var env = this.org.env;
+        var grid = env.grid_map;
         var c = this.getRealCol();
         var r = this.getRealRow();
+        // Screened through the state mirror first. A killer only harms a living
+        // body cell that is not armour, and most neighbours are empty ground or
+        // food, so the mirror answers the common case without a cell object.
+        var empty_id = CellStates.empty.id, food_id = CellStates.food.id;
+        var wall_id = CellStates.wall.id, armor_id = CellStates.armor.id;
         for (var loc of Hyperparams.killableNeighbors) {
-            var cell = env.grid_map.cellAt(c+loc[0], r+loc[1]);
-            this.killNeighbor(cell);
+            var id = grid.stateIdAt(c + loc[0], r + loc[1]);
+            if (id < 0 || id === empty_id || id === food_id || id === wall_id || id === armor_id) continue;
+            this.killNeighbor(grid.cellAt(c + loc[0], r + loc[1]));
         }
     }
 
