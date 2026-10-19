@@ -74,18 +74,25 @@ class MindViewer {
         }
 
         ctx.font = '10px sans-serif';
+        const shared_label = `${shared_n} shared`;
         ctx.fillStyle = '#6fe3c4';
-        ctx.fillText(`${shared_n} shared`, 10, BAR_H + 22);
+        ctx.fillText(shared_label, 10, BAR_H + 22);
         ctx.fillStyle = '#8fa4bd';
         // A brain only fills its private memory by thinking, and the organism on
         // the editor bench never ticks. Flat bars there are correct, but silently
         // flat reads as broken, so the panel says which it is.
         const idle = info.private.every((v) => v === 0);
-        ctx.fillText(`${private_n} private${idle ? ' (idle)' : ''}`,
-            10 + bar_w * shared_n + 4, BAR_H + 22);
+        // The private label sits over its own bars, but a small shared slice puts
+        // that position inside the shared label's text, so the two overlap. Push
+        // it clear of whichever is further right.
+        const private_x = Math.max(10 + bar_w * shared_n + 4,
+            10 + ctx.measureText(shared_label).width + 8);
+        ctx.fillText(`${private_n} private${idle ? ' (idle)' : ''}`, private_x, BAR_H + 22);
         ctx.fillStyle = '#68727f';
-        ctx.fillText(`gain ${Number.isFinite(gain) ? gain.toFixed(2) : '--'}`,
-            this.canvas.width - 58, BAR_H + 22);
+        // Right-aligned by measurement: a fixed inset clips a wider value.
+        const gain_label = `gain ${Number.isFinite(gain) ? gain.toFixed(2) : '--'}`;
+        ctx.fillText(gain_label,
+            this.canvas.width - ctx.measureText(gain_label).width - 8, BAR_H + 22);
 
         // ---- weight matrix: the inherited, evolved part ----
         const cell = Math.max(1, Math.floor(matrix_px / N));
@@ -104,6 +111,15 @@ class MindViewer {
         ctx.strokeStyle = 'rgba(255,255,255,0.1)';
         ctx.strokeRect(ox - 0.5, oy - 0.5, N * cell + 1, N * cell + 1);
         ctx.fillStyle = '#68727f';
+        // An all-zero matrix draws as an empty box, which reads as a broken
+        // viewer rather than as the fact it is. Say which one it is.
+        if (info.blank) {
+            ctx.fillStyle = '#d8a657';
+            ctx.fillText('no weights', ox + N * cell + 8, oy + 10);
+            ctx.fillStyle = '#68727f';
+            ctx.fillText('never ran', ox + N * cell + 8, oy + 24);
+            return true;
+        }
         ctx.fillText(`${N}x${N} weights`, ox + N * cell + 8, oy + 10);
         ctx.fillText('blue +, red -', ox + N * cell + 8, oy + 24);
         return true;

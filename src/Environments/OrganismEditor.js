@@ -19,16 +19,35 @@ class OrganismEditor extends Environment{
         var cell_size = 13;
         // The editor needs an arena so the organism sitting on the workbench has
         // somewhere to hold its brain weights. 4 slots is plenty for one workbench.
-        // Same gate as the world: the workbench must build brains of exactly the
-        // shape the world runs, or an organism dropped from here would not fit.
-        const shape = clampBrainShape(Hyperparams.brainN, Hyperparams.brainSharedFrac);
-        this.brain_shape = shape;
-        this.brain_arena = new BrainArena(4, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
+        this.initHiveMind();
         this.grid_map = new GridMap(15, 15, cell_size);
         this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
         this.renderer.fillShape(195, 195);
         this.controller = new EditorController(this, this.renderer.canvas);
         this.setDefaultOrg();
+    }
+
+    /**
+     * Build the workbench arena to the shape the world currently runs.
+     *
+     * The workbench must match the world exactly or brains cannot travel between
+     * them: BrainArena.copyFrom refuses a shape it cannot represent, which left
+     * an inspected organism's weights all zero and the inspector describing the
+     * workbench's own geometry instead of the creature's. Re-callable, because
+     * the brain shape is a live setting.
+     */
+    initHiveMind() {
+        const shape = clampBrainShape(Hyperparams.brainN, Hyperparams.brainSharedFrac);
+        if (this.brain_arena && this.brain_arena.N === shape.N
+            && this.brain_arena.shared_n === shape.shared_n) return false;
+        this.brain_shape = shape;
+        this.brain_arena = new BrainArena(4, shape.N, shape.shared_n, shape.sense_n, shape.action_n);
+        // Any brain on the bench holds a slot in the arena that just went away.
+        if (this.organism && this.organism.brain) {
+            this.organism.brain.slot = -1;
+            this.organism.brain.arena = null;
+        }
+        return true;
     }
 
     update() {

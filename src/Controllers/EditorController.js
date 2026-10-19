@@ -77,7 +77,12 @@ class EditorController extends CanvasController{
         else if (this.right_click)
             this.env.removeCellFromOrg(this.mouse_c, this.mouse_r);
 
-        this.setBrainPanelVisibility();
+        // Opening the panel is not enough: the brain readout and the mind canvas
+        // are only written by setBrainDetails, so adding the eye that reveals the
+        // panel would otherwise leave it blank until some other path refreshed it.
+        if (this.setBrainPanelVisibility()) {
+            this.setBrainDetails();
+        }
         this.setMoveRangeVisibility();
         this.updateDetails();
     }

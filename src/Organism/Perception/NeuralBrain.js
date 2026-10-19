@@ -118,15 +118,18 @@ class NeuralBrain {
      * at the wrong offsets, so the panel was not describing that organism at all.
      */
     copy(parentBrain) {
-        if (!parentBrain || !parentBrain.arena || parentBrain.slot < 0) return;
+        if (!parentBrain || !parentBrain.arena || parentBrain.slot < 0) return false;
         if (!this.arena) this.arena = parentBrain.arena;
         if (!this.field) this.field = parentBrain.field;
         if (this.slot < 0) this.slot = this.arena.alloc();
         if (this.arena === parentBrain.arena) {
             this.arena.copy(parentBrain.slot, this.slot);
-        } else {
-            this.arena.copyFrom(parentBrain.arena, parentBrain.slot, this.slot);
+            return true;
         }
+        // copyFrom refuses a shape it cannot represent. Returning that refusal
+        // is what lets a caller notice: a silently refused copy leaves a blanked
+        // brain that reads as a real one with every weight at zero.
+        return this.arena.copyFrom(parentBrain.arena, parentBrain.slot, this.slot);
     }
 
     mutate() {
@@ -238,6 +241,12 @@ class NeuralBrain {
         const sharedVals = new Float32Array(shared_n);
         if (this.field) this.field.read(this.owner.c, this.owner.r, sharedVals);
         const pOff = arena.pOffset(this.slot);
+        const weights = Array.from(
+            arena.W.subarray(arena.wOffset(this.slot), arena.wOffset(this.slot) + N * N));
+        // A blank slot is a brain that was never randomised or whose inheritance
+        // was refused. It is indistinguishable from a real brain in every other
+        // field, so the viewer is told rather than left to draw an empty grid.
+        const blank = weights.every((w) => w === 0);
         return {
             N, shared_n, private_n,
             sense_n: arena.sense_n,
@@ -245,7 +254,8 @@ class NeuralBrain {
             params: arena.paramCount(),
             shared: Array.from(sharedVals),
             private: Array.from(arena.hPriv.subarray(pOff, pOff + private_n)),
-            weights: Array.from(arena.W.subarray(arena.wOffset(this.slot), arena.wOffset(this.slot) + N * N)),
+            weights,
+            blank,
             gain: arena.gain[this.slot],
         };
     }

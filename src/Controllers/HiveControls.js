@@ -128,9 +128,28 @@ class HiveControls {
         Hyperparams.brainN = shape.N;
         Hyperparams.brainSharedFrac = shape.frac;
         this.env.initHiveMind();
+        this.rebuildEditorArena();
         this.env.reset(false, true);
         this.loadValuesFromParams();
         return true;
+    }
+
+    /**
+     * Rebuild the workbench arena alongside the world's.
+     *
+     * The editor holds its own arena, and a brain only copies between arenas of
+     * identical shape. Leaving the workbench on the old shape makes inspecting a
+     * creature show zeroed weights and the workbench's geometry rather than the
+     * creature's, so the two must be rebuilt together.
+     */
+    rebuildEditorArena() {
+        const editor = this.engine ? this.engine.organism_editor : null;
+        if (!editor || !editor.initHiveMind) return;
+        if (editor.initHiveMind() && editor.setDefaultOrg) {
+            // The organism on the bench lost its slot with the old arena; a
+            // fresh default body is the only state guaranteed to be valid.
+            editor.setDefaultOrg();
+        }
     }
 
     /** Surface clamp decisions to the user. Silence would be the real bug. */
@@ -183,6 +202,7 @@ class HiveControls {
 
         if (shapeChanged) {
             this.env.initHiveMind();
+            this.rebuildEditorArena();
             this.env.reset(false, true);
             notes.push(`Loaded brain shape ${shape.N} channels (${shape.shared_n} collective); world restarted.`);
         } else {
