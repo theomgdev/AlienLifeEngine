@@ -136,16 +136,18 @@ class NeuralBrain {
      * Mutate the weights.
      *
      * With evolved rates the strength comes from this organism's own mutation
-     * rate, so the trait that governs how much its body changes governs its mind
-     * too. The child's rate is read, not the parent's: the rate drifts at birth
-     * before this runs, so a lineage stepping its rate down fine-tunes from that
-     * generation onward rather than one behind.
+     * rate, scaled by its lineage's inherited coupling ratio, so the trait that
+     * governs how much its body changes governs its mind too -- but how tightly
+     * is itself up for evolution. The child's values are read, not the parent's:
+     * both drift at birth before this runs, so a lineage stepping either one
+     * down fine-tunes from that generation onward rather than one behind.
      */
     mutate() {
         if (!this.arena || this.slot < 0) return;
         const sigma = Hyperparams.useGlobalMutability
             ? Hyperparams.brainMutationSigma
-            : brainSigmaFor(this.owner ? this.owner.mutability : 0);
+            : brainSigmaFor(this.owner ? this.owner.mutability : 0,
+                this.owner ? this.owner.brain_coupling : 1);
         this.arena.mutate(this.slot, RNG, sigma);
     }
 

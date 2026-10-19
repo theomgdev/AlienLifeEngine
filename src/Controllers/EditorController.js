@@ -7,6 +7,7 @@ const Species = require("../Stats/Species");
 const LoadController = require("./LoadController");
 const FossilRecord = require("../Stats/FossilRecord");
 const MindViewer = require("../Rendering/MindViewer");
+const { brainSigmaFor } = require("../Organism/Perception/BrainShape");
 
 class EditorController extends CanvasController{
     constructor(env, canvas) {
@@ -220,9 +221,19 @@ class EditorController extends CanvasController{
        
 		if (Hyperparams.useGlobalMutability) {
             $('#mutation-rate').css('display', 'none');
+            $('#brain-coupling').css('display', 'none');
         }
         else {
             $('#mutation-rate').css('display', 'block');
+            // Only meaningful for a brain, and only while the rate is evolving:
+            // under a fixed rate the manual sigma is used and the ratio is idle.
+            if (org.anatomy.has_eyes) {
+                $('#brain-coupling').text(`Brain Coupling: ${org.brain_coupling.toFixed(2)}x`
+                    + ` (sigma ${brainSigmaFor(org.mutability, org.brain_coupling).toFixed(3)})`);
+                $('#brain-coupling').css('display', 'block');
+            } else {
+                $('#brain-coupling').css('display', 'none');
+            }
         }
 
         this.setMoveRangeVisibility();

@@ -5,6 +5,7 @@ const Directions = require("./Directions");
 const Anatomy = require("./Anatomy");
 const NeuralBrain = require("./Perception/NeuralBrain");
 const SensoryVector = require("./Perception/SensoryVector");
+const { COUPLING_DEFAULT, COUPLING_STEP, clampCoupling } = require("./Perception/BrainShape");
 const FossilRecord = require("../Stats/FossilRecord");
 const SerializeHelper = require("../Utils/SerializeHelper");
 const RNG = require("../Utils/RNG");
@@ -24,6 +25,10 @@ class Organism {
         this.move_count = 0;
         this.move_range = 4;
         this.mutability = 15;
+        // How strongly this lineage ties brain mutation strength to body
+        // mutation rate. Inherited and drifting like the rate itself, so
+        // protecting a working mind no longer costs anatomical search.
+        this.brain_coupling = COUPLING_DEFAULT;
         this.damage = 0;
         // Every organism carries a brain. It only gets used once the body has an
         // eye, but it is inherited unconditionally so a lineage that loses its
@@ -43,6 +48,7 @@ class Organism {
     inherit(parent) {
         this.move_range = parent.move_range;
         this.mutability = parent.mutability;
+        this.brain_coupling = parent.brain_coupling;
         this.species = parent.species;
         for (var c of parent.anatomy.cells){
             //deep copy parent cells
@@ -83,6 +89,13 @@ class Organism {
                 org.mutability--;
                 if (org.mutability < 1)
                     org.mutability = 1;
+            }
+            // The coupling drifts a tenth as often as the rate. It decides how
+            // the next generations read their own rate, so a lineage should
+            // settle it over many births rather than re-argue it at each one.
+            if (RNG.random() < 0.1) {
+                org.brain_coupling = clampCoupling(org.brain_coupling
+                    + (RNG.random() < 0.5 ? COUPLING_STEP : -COUPLING_STEP));
             }
         } 
         var mutated = false;
@@ -434,6 +447,11 @@ class Organism {
 
     loadRaw(org) {
         SerializeHelper.overwriteNonObjects(org, this);
+        // A world file carries whatever value it was saved with, and an older one
+        // carries none at all. Clamping here is what keeps a hand-edited or
+        // pre-coupling file from putting an out-of-range ratio into the engine.
+        this.brain_coupling = clampCoupling(
+            this.brain_coupling === undefined ? COUPLING_DEFAULT : this.brain_coupling);
         this.observations = [];
         this.anatomy.loadRaw(org.anatomy)
         if (org.brain) this.brain.loadRaw(org.brain);

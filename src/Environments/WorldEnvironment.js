@@ -226,6 +226,26 @@ class WorldEnvironment extends Environment{
         return this.total_mutability / this.organisms.length;
     }
 
+    /**
+     * Average coupling across thinking organisms only.
+     *
+     * Restricted to brains on purpose: the ratio is inherited by everything but
+     * only ever read when a brain mutates, so averaging over a world of plants
+     * would report a number nothing in it acts on. Walked on demand rather than
+     * kept as a running total -- it is read once per panel open, not per tick,
+     * and a lineage's eyes come and go, which a running total cannot track.
+     */
+    averageBrainCoupling() {
+        let sum = 0, n = 0;
+        for (const org of this.organisms) {
+            if (org.anatomy && org.anatomy.has_eyes) {
+                sum += org.brain_coupling;
+                n++;
+            }
+        }
+        return n > 0 ? sum / n : 0;
+    }
+
     changeCell(c, r, state, owner) {
         super.changeCell(c, r, state, owner);
         this.renderer.addToRender(this.grid_map.cellAt(c, r));

@@ -165,16 +165,52 @@ function clampFieldParams(radius, leak, tile_size) {
  * so the same setting that makes sighted organisms appear also widens the search
  * that diversifies them. Clamped to the same bounds as the manual control, so a
  * lineage that evolves an extreme rate cannot push sigma out of range.
+ *
+ * `coupling` is how strongly this particular lineage ties the two together. A
+ * fixed ratio of 1 leaves a lineage that wants to protect a working brain only
+ * one lever -- freezing its body -- and measured runs did exactly that, driving
+ * the rate to 1 and stalling anatomical search to buy neural stability. Letting
+ * the ratio evolve separates the two decisions: a lineage can hold a mutable
+ * body and a calm mind, or the reverse, instead of paying for one with the other.
  */
 const SIGMA_PER_MUTABILITY = 0.016;
 
-function brainSigmaFor(mutability) {
+function brainSigmaFor(mutability, coupling = 1) {
     const m = Number(mutability);
     if (!Number.isFinite(m) || m <= 0) return 0;
+    const k = Number.isFinite(Number(coupling)) ? Number(coupling) : 1;
     return Math.min(BRAIN_LIMITS.MUT_SIGMA_MAX,
-        Math.max(BRAIN_LIMITS.MUT_SIGMA_MIN, m * SIGMA_PER_MUTABILITY));
+        Math.max(BRAIN_LIMITS.MUT_SIGMA_MIN, m * SIGMA_PER_MUTABILITY * k));
+}
+
+/**
+ * Bounds on the evolvable brain/body coupling ratio.
+ *
+ * Deliberately narrow and coarse-stepped: the fixed-ratio behaviour is already
+ * productive, so this is an escape hatch from one forced trade-off, not a new
+ * search space. 0.25 is the floor because below it the brain barely tracks the
+ * body at all and the coupling that produces the body-mind fit stops meaning
+ * anything; 2 is the ceiling because the rate alone can already reach sigma 0.48
+ * and doubling that is as far as a lineage needs to overshoot. The step is large
+ * enough that a drift is a real decision rather than noise, and it divides both
+ * bounds exactly so a lineage can sit on either.
+ */
+const COUPLING_MIN = 0.25;
+const COUPLING_MAX = 2;
+const COUPLING_STEP = 0.05;
+const COUPLING_DEFAULT = 1;
+
+/** Clamp a coupling ratio, rounded to the step grid to stop float drift. */
+function clampCoupling(value) {
+    const k = Number(value);
+    if (!Number.isFinite(k)) return COUPLING_DEFAULT;
+    const snapped = Math.round(k / COUPLING_STEP) * COUPLING_STEP;
+    return Math.min(COUPLING_MAX, Math.max(COUPLING_MIN,
+        Math.round(snapped * 100) / 100));
 }
 
 module.exports = { BRAIN_LIMITS, ACTION_N, ACTIONS, ACTION_NAMES, SENSE_N,
                    SIGMA_PER_MUTABILITY, brainSigmaFor,
+                   COUPLING_MIN, COUPLING_MAX, COUPLING_STEP, COUPLING_DEFAULT,
+                   clampCoupling,
                    clampBrainShape, clampFieldParams, clampNum };

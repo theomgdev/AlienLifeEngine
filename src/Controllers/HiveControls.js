@@ -7,7 +7,7 @@
 
 const WorldConfig = require("../WorldConfig");
 const Hyperparams = require("../Hyperparameters");
-const { BRAIN_LIMITS, SIGMA_PER_MUTABILITY, brainSigmaFor,
+const { BRAIN_LIMITS, SIGMA_PER_MUTABILITY, brainSigmaFor, COUPLING_DEFAULT,
         clampBrainShape, clampFieldParams, clampNum } = require('../Organism/Perception/BrainShape');
 
 
@@ -236,10 +236,13 @@ class HiveControls {
         }
         const avg = this.env && this.env.averageMutability ? this.env.averageMutability() : 0;
         const live = avg > 0 ? avg : Hyperparams.globalMutability;
+        const k = this.env && this.env.averageBrainCoupling ? this.env.averageBrainCoupling() : 0;
+        const coupling = k > 0 ? k : COUPLING_DEFAULT;
         $('#brain-mutation-note').text(
             `Scaled from each organism's own mutation rate`
-            + ` (${SIGMA_PER_MUTABILITY} per point).`
-            + ` A rate of ${Math.round(live * 100) / 100} gives ${brainSigmaFor(live).toFixed(3)}.`);
+            + ` (${SIGMA_PER_MUTABILITY} per point) times its evolved coupling.`
+            + ` A rate of ${Math.round(live * 100) / 100} at ${coupling.toFixed(2)}x`
+            + ` gives ${brainSigmaFor(live, coupling).toFixed(3)}.`);
     }
 
     /** Rebuild arena + field and restart life, since brain shape changed. */
