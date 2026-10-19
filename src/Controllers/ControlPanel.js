@@ -6,6 +6,7 @@ const LoadController = require("./LoadController");
 const HiveControls = require("./HiveControls");
 const ChroniclePanel = require("./ChroniclePanel");
 const SpeciesLink = require("./SpeciesLink");
+const SpeciesHover = require("./SpeciesHover");
 
 class ControlPanel {
     constructor(engine) {
@@ -31,6 +32,7 @@ class ControlPanel {
         this.hive_controls = new HiveControls(engine);
         this.chronicle_panel = new ChroniclePanel(engine);
         SpeciesLink.init(this);
+        SpeciesHover.init();
         LoadController.control_panel = this;
     }
 

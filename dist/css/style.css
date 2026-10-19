@@ -1645,3 +1645,60 @@ input[type="checkbox"].ui-switch:checked::after {
     outline: 1px solid var(--accent-life);
     outline-offset: 2px;
 }
+
+/* Hover card showing a species' body. Positioned against the viewport from JS,
+   so it must not be clipped by the drawer it is anchored inside. */
+#species-hover-card {
+    position: fixed;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--drawer-bg);
+    border: 1px solid var(--card-hover-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    backdrop-filter: blur(12px);
+    /* The pointer is over the name, never over the card: letting the card take
+       the pointer would make it flicker as it appears under the cursor. */
+    pointer-events: none;
+}
+
+#species-hover-card.visible {
+    display: flex;
+}
+
+#species-hover-card .hover-anatomy {
+    display: block;
+    /* Sized by the attributes the renderer sets, capped here so a long body
+       cannot stretch the card; auto width/height would discard the intrinsic
+       size the positioning code measures against. */
+    max-width: 72px;
+    max-height: 72px;
+    /* Cells are drawn one device pixel per simulation cell and scaled up, so
+       smoothing would turn a crisp body into a blur. */
+    image-rendering: pixelated;
+    background: var(--bg-universe);
+    border-radius: var(--radius-sm);
+}
+
+#species-hover-card .hover-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 170px;
+}
+
+#species-hover-card .hover-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+
+#species-hover-card .hover-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
