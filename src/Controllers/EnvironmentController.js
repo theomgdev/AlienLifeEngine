@@ -101,6 +101,14 @@ class EnvironmentController extends CanvasController{
         // anchor the drag in the same coordinate space dragScreen() measures in
         this.start_x = this.view_x;
         this.start_y = this.view_y;
+        // Refresh the clone template once per press, not per mousemove: the
+        // workbench stays editable while Drop is armed, so a template captured
+        // when the mode was chosen would plant the creature as it was before
+        // those edits.
+        if (this.mode === Modes.Clone && this.control_panel && this.control_panel.engine) {
+            const editor = this.control_panel.engine.organism_editor;
+            if (editor) this.org_to_clone = editor.getCopyOfOrg();
+        }
         this.performModeAction();
     }
 

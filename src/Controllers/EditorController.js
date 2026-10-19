@@ -35,9 +35,36 @@ class EditorController extends CanvasController{
         return this.env.organism.anatomy.getLocalCell(this.mouse_c-this.env.organism.c, this.mouse_r-this.env.organism.r);
     }
 
+    /**
+     * Clicking the workbench IS the request to draw on it.
+     *
+     * Mode is global across both canvases, so a tool chosen for the world (food,
+     * walls, select) leaves the workbench inert and a click there does nothing
+     * at all. Reaching for the grid is unambiguous though -- the workbench has
+     * no other use -- so the click switches to Draw and lands, instead of being
+     * discarded while the user looks for what they did wrong.
+     */
+    claimDrawMode() {
+        if (this.mode === Modes.Edit) return true;
+        const cp = this.control_panel;
+        if (!cp || !cp.setMode) return false;
+        cp.setMode(Modes.Edit);
+        // Keep the dock in step: setMode moves the controllers, the button
+        // highlight lives in the panel's own click handler.
+        $('.edit-mode-btn').removeClass('selected');
+        $('.edit').addClass('selected');
+        return this.mode === Modes.Edit;
+    }
+
     editOrganism() {
-        if (this.edit_cell_type == null || this.mode != Modes.Edit)
+        if (!this.claimDrawMode())
             return;
+        if (this.edit_cell_type == null) {
+            // Nothing to draw with: say so where the user is looking rather
+            // than swallowing the click.
+            this.flashPalettePrompt();
+            return;
+        }
         if (this.left_click){
             if(this.edit_cell_type == CellStates.eye && this.cur_cell.state == CellStates.eye) {
                 var loc_cell = this.getCurLocalCell();
@@ -53,6 +80,23 @@ class EditorController extends CanvasController{
         this.setBrainPanelVisibility();
         this.setMoveRangeVisibility();
         this.updateDetails();
+    }
+
+    /**
+     * Draw a tissue the user has not picked one for: point at the palette.
+     *
+     * The class drives a CSS animation and is removed on its own animationend,
+     * so repeated clicks keep re-triggering it rather than firing once and
+     * leaving the element permanently marked.
+     */
+    flashPalettePrompt() {
+        const palette = document.getElementById('cell-selections');
+        if (!palette) return;
+        palette.classList.remove('palette-prompt');
+        // Reading offsetWidth forces the style flush that lets the same
+        // animation restart on consecutive clicks.
+        void palette.offsetWidth;
+        palette.classList.add('palette-prompt');
     }
 
     updateDetails() {
@@ -86,9 +130,12 @@ class EditorController extends CanvasController{
                     self.edit_cell_type = CellStates.eye;
                     break;
             }
-            $(".cell-type" ).css( "border-color", "black" );
-            var selected = '#'+this.id+'.cell-type';
-            $(selected).css("border-color", "yellow");
+            $(".cell-type" ).removeClass("selected-cell-type");
+            $('#'+this.id+'.cell-type').addClass("selected-cell-type");
+            // Picking a tissue is the other half of the same intent: the next
+            // click is going to be on the grid, so arm Draw now rather than
+            // letting that click be the one that discovers the wrong mode.
+            self.claimDrawMode();
         });
     }
 

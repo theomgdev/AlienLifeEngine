@@ -964,6 +964,37 @@ input[type="checkbox"].ui-switch:checked::after {
     border-color: #ffffff;
 }
 
+/* The armed tissue. A ring outside the swatch rather than a border colour, so
+   it reads against every palette colour including the pale eye. */
+.cell-type.selected-cell-type {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px var(--accent-life), 0 2px 10px rgba(0,0,0,0.45);
+    transform: scale(1.1);
+}
+
+/* Drawing with no tissue armed points here. Animation rather than a lasting
+   style: the prompt is the motion, and it leaves no state behind to clear. */
+.palette-prompt {
+    animation: palette-attention 0.9s ease-out 1;
+}
+
+@keyframes palette-attention {
+    0%   { transform: translateY(0); }
+    15%  { transform: translateY(-3px); }
+    30%  { transform: translateY(0); }
+    45%  { transform: translateY(-2px); }
+    60%  { transform: translateY(0); }
+}
+
+.palette-prompt .cell-palette-label {
+    animation: palette-label-flash 0.9s ease-out 1;
+}
+
+@keyframes palette-label-flash {
+    0%, 100% { color: inherit; }
+    30%      { color: var(--accent-life); }
+}
+
 .workbench-actions {
     display: flex;
     gap: 8px;
