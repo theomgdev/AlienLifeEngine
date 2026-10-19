@@ -130,6 +130,24 @@ class BrainArena {
     bOffset(slot) { return slot * this.N; }
     pOffset(slot) { return slot * this.private_n; }
 
+    /**
+     * Zero a slot's weights and state without drawing any randomness.
+     *
+     * For a slot whose weights are about to be copied over: the clear is what
+     * makes slot reuse safe, while the gaussians randomize() would draw are
+     * never read. A blanked brain that somehow runs outputs a constant rather
+     * than a recycled stranger's behaviour.
+     */
+    blank(slot) {
+        const { N, private_n, sense_n, action_n } = this;
+        this.W.fill(0, this.wOffset(slot), this.wOffset(slot) + N * N);
+        this.Win.fill(0, this.winOffset(slot), this.winOffset(slot) + N * sense_n);
+        this.Wout.fill(0, this.woutOffset(slot), this.woutOffset(slot) + action_n * N);
+        this.b.fill(0, this.bOffset(slot), this.bOffset(slot) + N);
+        this.hPriv.fill(0, this.pOffset(slot), this.pOffset(slot) + private_n);
+        this.gain[slot] = 1;
+    }
+
     /** Randomise a slot — used for the first brain of a lineage. */
     randomize(slot, rng, scale = 0.6) {
         const { N, private_n, sense_n, action_n } = this;

@@ -75,13 +75,26 @@ class NeuralBrain {
         this.last_output = 0;
     }
 
-    /** Attach to the world's arena + collective field, taking a fresh slot. */
-    attach(arena, field) {
+    /**
+     * Attach to the world's arena + collective field, taking a fresh slot.
+     *
+     * `randomize_weights` exists because a newborn with a parent has every weight
+     * overwritten by copy() immediately afterwards, so drawing N*N + N*sense +
+     * action*N + N gaussians for it is work nothing ever reads. The slot's state
+     * still has to be cleared — a recycled slot carries the previous occupant's
+     * weights, and skipping the clear would make a child inherit a stranger's
+     * mind if the copy never comes.
+     */
+    attach(arena, field, randomize_weights = true) {
         this.arena = arena;
         this.field = field;
         if (this.slot < 0) {
             this.slot = arena.alloc();
-            arena.randomize(this.slot, RNG, Hyperparams.brainInitScale);
+            if (randomize_weights) {
+                arena.randomize(this.slot, RNG, Hyperparams.brainInitScale);
+            } else {
+                arena.blank(this.slot);
+            }
         }
         return this;
     }

@@ -31,7 +31,9 @@ class Organism {
         this.observations = [];
         this.brain = new NeuralBrain(this);
         if (env && env.brain_arena) {
-            this.brain.attach(env.brain_arena, env.collective_field);
+            // A child's weights all come from inherit() a few lines down, so
+            // randomising them first is work nothing reads.
+            this.brain.attach(env.brain_arena, env.collective_field, parent == null);
         }
         if (parent != null) {
             this.inherit(parent);

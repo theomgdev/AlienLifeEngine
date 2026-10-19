@@ -69,8 +69,22 @@ class CollectiveField {
         this.field = new Float32Array(n);            // current collective state
         this.accum = new Float32Array(n);            // weighted contributions this tick
         this.weight = new Float32Array(this.tiles);  // weight sum per tile this tick
+        // Tiles that hold state or were written this tick. commit() walks this
+        // list instead of the whole grid: on a large world most tiles are empty
+        // and decaying an exact zero toward zero is work with no result. A tile
+        // enters on write() and leaves once it has faded to nothing.
+        this._live = new Int32Array(this.tiles);
+        this._isLive = new Uint8Array(this.tiles);
+        this._liveCount = 0;
 
         this._buildKernel();
+    }
+
+    /** Mark a tile as holding state, so commit() keeps visiting it. */
+    _touch(t) {
+        if (this._isLive[t]) return;
+        this._isLive[t] = 1;
+        this._live[this._liveCount++] = t;
     }
 
     /**
@@ -156,6 +170,7 @@ class CollectiveField {
             const base = t * channels;
             for (let i = 0; i < channels; i++) accum[base + i] += values[i] * wk;
             weight[t] += wk;
+            this._touch(t);
         }
     }
 
@@ -164,30 +179,51 @@ class CollectiveField {
      * after every thinking organism has run.
      */
     commit() {
-        const { tiles, channels, field, accum, weight, leak } = this;
+        const { channels, field, accum, weight, leak, _live, _isLive } = this;
         const keep = leak;
         const take = 1 - leak;
         // A quiet region should fade fast: at leak=0.85 a tile nothing thinks in any
         // more would hold a visible ghost for hundreds of ticks, which reads on
         // screen as a culture outliving its thinkers. Decay harder when empty.
         const emptyKeep = keep * keep * keep;
-        for (let t = 0; t < tiles; t++) {
+        let write = 0;
+        for (let idx = 0; idx < this._liveCount; idx++) {
+            const t = _live[idx];
             const w = weight[t];
             const base = t * channels;
+            let alive = false;
             if (w <= 0) {
                 for (let i = 0; i < channels; i++) {
                     const v = field[base + i] * emptyKeep;
-                    field[base + i] = (v > -1e-4 && v < 1e-4) ? 0 : v;
+                    if (v > -1e-4 && v < 1e-4) {
+                        field[base + i] = 0;
+                    } else {
+                        field[base + i] = v;
+                        alive = true;
+                    }
                 }
             } else {
                 const inv = 1 / w;
                 for (let i = 0; i < channels; i++) {
-                    field[base + i] = keep * field[base + i] + take * (accum[base + i] * inv);
+                    const j = base + i;
+                    field[j] = keep * field[j] + take * (accum[j] * inv);
+                    // Cleared inline rather than with a per-tile fill(): the loop
+                    // is already here, and 40k short fill() calls cost several
+                    // times the whole sweep they were meant to tidy up.
+                    accum[j] = 0;
                 }
+                weight[t] = 0;
+                alive = true;
+            }
+            // A tile that has decayed to exact zero holds nothing and contributes
+            // nothing, so it leaves the list until something writes to it again.
+            if (alive) {
+                _live[write++] = t;
+            } else {
+                _isLive[t] = 0;
             }
         }
-        accum.fill(0);
-        weight.fill(0);
+        this._liveCount = write;
     }
 
     // ---- introspection, for rendering and for the Chronicle ----------------
@@ -262,6 +298,18 @@ class CollectiveField {
         this.field = new Float32Array(raw.field);
         this.accum = new Float32Array(this.field.length);
         this.weight = new Float32Array(this.tiles);
+        // A loaded field arrives mid-decay, so every tile carrying state has to
+        // re-enter the live list: commit() only visits what is listed, and a tile
+        // left out would hold its culture frozen for the rest of the world's life.
+        this._live = new Int32Array(this.tiles);
+        this._isLive = new Uint8Array(this.tiles);
+        this._liveCount = 0;
+        for (let t = 0; t < this.tiles; t++) {
+            const base = t * this.channels;
+            for (let i = 0; i < this.channels; i++) {
+                if (this.field[base + i] !== 0) { this._touch(t); break; }
+            }
+        }
         this._buildKernel();
     }
 }
