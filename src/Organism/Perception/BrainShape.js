@@ -186,17 +186,20 @@ function brainSigmaFor(mutability, coupling = 1) {
 /**
  * Bounds on the evolvable brain/body coupling ratio.
  *
- * Deliberately narrow and coarse-stepped: the fixed-ratio behaviour is already
- * productive, so this is an escape hatch from one forced trade-off, not a new
- * search space. 0.25 is the floor because below it the brain barely tracks the
- * body at all and the coupling that produces the body-mind fit stops meaning
- * anything; 2 is the ceiling because the rate alone can already reach sigma 0.48
- * and doubling that is as far as a lineage needs to overshoot. The step is large
- * enough that a drift is a real decision rather than noise, and it divides both
- * bounds exactly so a lineage can sit on either.
+ * These are guard rails, not a tuning range: they exist so evolution can neither
+ * stop nor blow up, and everything between them is the lineages' business. The
+ * floor is one step rather than zero because zero would freeze a brain's weights
+ * permanently -- a lineage could evolve its way out of having a mind at all, with
+ * no path back since a frozen brain cannot rediscover anything. One step still
+ * mutates, twenty times slower than the default. The ceiling is where a lineage
+ * at the default rate reaches sigma 0.96, just under the manual maximum of 1, so
+ * the full usable strength is inside the range and anything beyond it would only
+ * be clamped away. The step stays coarse enough that a drift is a real decision
+ * rather than noise, and divides both bounds exactly so a lineage can sit on
+ * either.
  */
-const COUPLING_MIN = 0.25;
-const COUPLING_MAX = 2;
+const COUPLING_MIN = 0.05;
+const COUPLING_MAX = 4;
 const COUPLING_STEP = 0.05;
 const COUPLING_DEFAULT = 1;
 
